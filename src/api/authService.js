@@ -34,6 +34,13 @@ export async function loginWithEmailPassword(credentials) {
   return { token, user };
 }
 
+export async function registerUser(payload) {
+  const response = await api.post('/auth/register', payload, {
+    skipAuthRedirect: true,
+  });
+  return response.data;
+}
+
 export async function fetchCurrentUser() {
   const response = await api.get('/auth/me');
   return response.data?.user || response.data;
@@ -69,9 +76,8 @@ export function authErrorMessage(error) {
   }
 
   if (error?.response?.status === 401) {
-    return 'Invalid email or password.';
+    return 'Invalid username or password.';
   }
 
   return 'Unable to sign in right now. Please try again.';
 }
-

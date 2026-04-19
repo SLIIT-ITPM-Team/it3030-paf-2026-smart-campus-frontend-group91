@@ -56,8 +56,6 @@ const LoginPage = () => {
 
     try {
       await login({
-        // Backward-compatible with existing API payload expectation.
-        email: form.username.trim(),
         username: form.username.trim(),
         password: form.password,
       });
