@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authErrorMessage, registerUser } from '../api/authService';
 import Footer from '../components/Footer';
 
 const RegisterPage = () => {
@@ -13,14 +12,11 @@ const RegisterPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [serverError, setServerError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   const onChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
-    setServerError('');
   };
 
   const validate = () => {
@@ -46,32 +42,16 @@ const RegisterPage = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const onSubmit = async (event) => {
+  const onSubmit = (event) => {
     event.preventDefault();
     if (!validate()) {
       return;
     }
 
-    setSubmitting(true);
-    setServerError('');
-
-    try {
-      await registerUser({
-        username: form.username.trim(),
-        email: form.email.trim(),
-        password: form.password,
-        role: form.role,
-      });
-
-      setSubmitted(true);
-      setTimeout(() => {
-        navigate('/login');
-      }, 900);
-    } catch (error) {
-      setServerError(authErrorMessage(error));
-    } finally {
-      setSubmitting(false);
-    }
+    setSubmitted(true);
+    setTimeout(() => {
+      navigate('/login');
+    }, 900);
   };
 
   return (
@@ -185,10 +165,8 @@ const RegisterPage = () => {
               </div>
             ) : null}
 
-            {serverError ? <div className="auth-error">{serverError}</div> : null}
-
-            <button className="login-submit-btn" type="submit" disabled={submitting}>
-              <span>{submitting ? 'Registering...' : 'Register'}</span>
+            <button className="login-submit-btn" type="submit">
+              <span>Register</span>
               <span aria-hidden="true">&rarr;</span>
             </button>
 
