@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../api/api';
 import Footer from '../components/Footer';
 
 const RegisterPage = () => {
@@ -12,6 +13,7 @@ const RegisterPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const onChange = (event) => {
     const { name, value } = event.target;
@@ -42,16 +44,31 @@ const RegisterPage = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault();
     if (!validate()) {
       return;
     }
 
-    setSubmitted(true);
-    setTimeout(() => {
-      navigate('/login');
-    }, 900);
+    setApiError('');
+    try {
+      await api.post('/auth/register', {
+        username: form.username,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      });
+      setSubmitted(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 900);
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        'Registration failed. Please try again.';
+      setApiError(message);
+    }
   };
 
   return (
@@ -161,8 +178,12 @@ const RegisterPage = () => {
 
             {submitted ? (
               <div className="auth-success">
-                Account details captured. Redirecting to login...
+                Account created! Redirecting to login...
               </div>
+            ) : null}
+
+            {apiError ? (
+              <div className="field-error" style={{ marginBottom: '8px' }}>{apiError}</div>
             ) : null}
 
             <button className="login-submit-btn" type="submit">
