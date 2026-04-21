@@ -15,7 +15,12 @@ import RoleRoute from './RoleRoute';
 
 const DashboardEntry = () => {
   const { hasRoles } = useAuth();
+  const isAdmin = hasRoles(['ADMIN']);
   const isUserOnly = hasRoles(['USER']) && !hasRoles(['ADMIN', 'TECHNICIAN']);
+
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
 
   if (isUserOnly) {
     return <Navigate to="/user" replace />;
