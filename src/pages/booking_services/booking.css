@@ -17,6 +17,7 @@
     linear-gradient(160deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%);
   color: var(--booking-text);
   font-family: 'Manrope', 'Segoe UI', sans-serif;
+  text-align: left;
 }
 
 .booking-container {
@@ -159,9 +160,9 @@
   padding: 11px 12px;
   font: inherit;
   color: var(--booking-text);
-  background: #ffffff;
+  background: #f8fafc;
   box-sizing: border-box;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
 }
 
 .booking-input::placeholder,

@@ -36,6 +36,11 @@ const BookingFormPage = () => {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  const todayString = useMemo(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  }, []);
+
   useEffect(() => {
     const loadResources = async () => {
       try {
@@ -278,6 +283,7 @@ const BookingFormPage = () => {
               className="booking-input"
               value={form.bookingDate}
               onChange={onFieldChange}
+              min={todayString}
             />
             {errors.bookingDate ? <small className="field-error">{errors.bookingDate}</small> : null}
           </div>
@@ -335,7 +341,7 @@ const BookingFormPage = () => {
             {errors.purpose ? <small className="field-error">{errors.purpose}</small> : null}
           </div>
 
-          <div className="booking-col-6">
+          <div className="booking-col-12">
             <label className="booking-label">Real-Time Availability</label>
             {!availability.checked && !availability.checking ? (
               <div className="booking-alert booking-alert-info">
