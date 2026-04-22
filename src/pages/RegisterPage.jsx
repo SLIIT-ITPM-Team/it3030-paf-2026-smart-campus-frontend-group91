@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authErrorMessage, registerUser } from '../api/authService';
+import api from '../api/api';
 import Footer from '../components/Footer';
 
 const RegisterPage = () => {
@@ -13,14 +13,13 @@ const RegisterPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [serverError, setServerError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
-    setServerError('');
   };
 
   const validate = () => {
@@ -52,25 +51,24 @@ const RegisterPage = () => {
       return;
     }
 
-    setSubmitting(true);
-    setServerError('');
-
+    setApiError('');
     try {
-      await registerUser({
-        username: form.username.trim(),
-        email: form.email.trim(),
+      await api.post('/auth/register', {
+        username: form.username,
+        email: form.email,
         password: form.password,
         role: form.role,
       });
-
       setSubmitted(true);
       setTimeout(() => {
         navigate('/login');
       }, 900);
-    } catch (error) {
-      setServerError(authErrorMessage(error));
-    } finally {
-      setSubmitting(false);
+    } catch (err) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        'Registration failed. Please try again.';
+      setApiError(message);
     }
   };
 
@@ -149,19 +147,27 @@ const RegisterPage = () => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={form.password}
                   onChange={onChange}
                   placeholder="Create a password"
                 />
+                <button
+                  type="button"
+                  className="password-visibility-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
               </div>
               {errors.password ? (
                 <span className="field-error">{errors.password}</span>
               ) : null}
             </label>
 
-            <label className="auth-field" htmlFor="role">
+            {/* <label className="auth-field" htmlFor="role">
               Role
               <div className="auth-input-wrap">
                 <select
@@ -177,18 +183,20 @@ const RegisterPage = () => {
                 </select>
               </div>
               {errors.role ? <span className="field-error">{errors.role}</span> : null}
-            </label>
+            </label> */}
 
             {submitted ? (
               <div className="auth-success">
-                Account details captured. Redirecting to login...
+                Account created! Redirecting to login...
               </div>
             ) : null}
 
-            {serverError ? <div className="auth-error">{serverError}</div> : null}
+            {apiError ? (
+              <div className="field-error" style={{ marginBottom: '8px' }}>{apiError}</div>
+            ) : null}
 
-            <button className="login-submit-btn" type="submit" disabled={submitting}>
-              <span>{submitting ? 'Registering...' : 'Register'}</span>
+            <button className="login-submit-btn" type="submit">
+              <span>Register</span>
               <span aria-hidden="true">&rarr;</span>
             </button>
 
