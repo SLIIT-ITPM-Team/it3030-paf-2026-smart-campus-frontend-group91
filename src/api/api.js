@@ -1,17 +1,42 @@
 import axios from 'axios';
-import { clearAuthSession, getStoredToken } from '../auth/authStorage';
+import { clearAuthSession, getStoredToken, getStoredUser } from '../auth/authStorage';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
 
 const api = axios.create({ baseURL: API_BASE_URL });
 
+const setHeaderIfMissing = (headers, key, value) => {
+  if (value === undefined || value === null || value === '') {
+    return;
+  }
+
+  if (typeof headers?.set === 'function') {
+    if (!headers.get?.(key)) {
+      headers.set(key, String(value));
+    }
+    return;
+  }
+
+  if (headers && headers[key] == null) {
+    headers[key] = String(value);
+  }
+};
+
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
+  const user = getStoredUser();
 
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (user) {
+    config.headers = config.headers || {};
+    setHeaderIfMissing(config.headers, 'X-User-Id', user.id);
+    setHeaderIfMissing(config.headers, 'X-User-Name', user.username || user.name || user.fullName || user.email);
+    setHeaderIfMissing(config.headers, 'X-User-Email', user.email);
   }
 
   return config;

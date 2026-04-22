@@ -1,4 +1,5 @@
 import api from '../api/api';
+import { getStoredUser } from '../auth/authStorage';
 
 const toTimeValue = (value) => {
   if (!value) return '';
@@ -63,6 +64,21 @@ const normalizeBooking = (item) => {
   };
 };
 
+const getUserHeaders = (userId) => {
+  const headers = {};
+
+  if (userId !== undefined && userId !== null && userId !== '') {
+    headers['X-User-Id'] = String(userId);
+  } else {
+    const storedUser = getStoredUser();
+    if (storedUser?.id !== undefined && storedUser?.id !== null && storedUser?.id !== '') {
+      headers['X-User-Id'] = String(storedUser.id);
+    }
+  }
+
+  return headers;
+};
+
 const bookingService = {
   getAllBookings: async (filters = {}) => {
     try {
@@ -100,6 +116,7 @@ const bookingService = {
           fromDate: filters.fromDate || undefined,
           toDate: filters.toDate || undefined,
         },
+        headers: getUserHeaders(_userId),
       });
       return Array.isArray(response.data) ? response.data.map(normalizeBooking) : [];
     } catch (error) {
@@ -140,7 +157,9 @@ const bookingService = {
 
   createBooking: async (payload) => {
     try {
-      const response = await api.post('/bookings', normalizeCreatePayload(payload));
+      const response = await api.post('/bookings', normalizeCreatePayload(payload), {
+        headers: getUserHeaders(),
+      });
       return normalizeBooking(response.data);
     } catch (error) {
       console.error('Failed to create booking:', error);
@@ -194,6 +213,8 @@ const bookingService = {
     try {
       const response = await api.patch(`/bookings/${id}/cancel`, {
         reason: String(reason || 'Cancelled by requester.').trim(),
+      }, {
+        headers: getUserHeaders(),
       });
       return normalizeBooking(response.data);
     } catch (error) {
