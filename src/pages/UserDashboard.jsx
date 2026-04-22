@@ -181,11 +181,10 @@ const seedTickets = [
 ];
 
 const UserDashboard = () => {
-  const { user, hasRoles } = useAuth();
-
-  const isAdmin = hasRoles(['ADMIN']);
-  const isTechnician = hasRoles(['TECHNICIAN']);
-  const canManageTickets = isAdmin || isTechnician;
+  const { user } = useAuth();
+  const isAdmin = false;
+  const canManageTickets = false;
+  const dashboardRoleLabel = 'USER';
 
   const [activeModule, setActiveModule] = useState('catalogue');
 
@@ -623,7 +622,7 @@ const UserDashboard = () => {
     if (!canManageTickets) {
       return;
     }
-    const fallbackAssignee = isTechnician ? displayName : '';
+    const fallbackAssignee = '';
     const assignee = (ticketInputs[ticketId]?.assignee || fallbackAssignee).trim();
     if (!assignee) {
       setTicketError('Please enter technician/staff assignee before assigning.');
@@ -680,7 +679,7 @@ const UserDashboard = () => {
           assignedTo:
             item.assignedTo ||
             assignee ||
-            (isTechnician ? displayName : item.assignedTo),
+            item.assignedTo,
           resolutionNotes:
             nextStatus === 'RESOLVED' || nextStatus === 'CLOSED'
               ? resolutionNotes || item.resolutionNotes
@@ -774,6 +773,23 @@ const UserDashboard = () => {
       ticket.reporterEmail === user?.email &&
       ['OPEN', 'IN_PROGRESS', 'RESOLVED'].includes(ticket.status),
   ).length;
+  const summaryCards = [
+    {
+      label: 'Catalogue Items',
+      value: resourcesCatalogue.length,
+      hint: 'Facilities and assets available in the system.',
+    },
+    {
+      label: 'My Bookings',
+      value: myBookingsCount,
+      hint: 'Current and past booking requests.',
+    },
+    {
+      label: 'My Open Tickets',
+      value: myOpenTicketsCount,
+      hint: 'Tickets still in OPEN, IN_PROGRESS, or RESOLVED.',
+    },
+  ];
 
   return (
     <section className="udash-root">
@@ -1189,23 +1205,18 @@ const UserDashboard = () => {
           </p>
           <div className="udash-meta-row">
             <span className="udash-pill">{today}</span>
-            <span className="udash-pill">Role: {isAdmin ? 'ADMIN' : isTechnician ? 'TECHNICIAN' : 'USER'}</span>
+            <span className="udash-pill">Role: {dashboardRoleLabel}</span>
           </div>
         </header>
 
         <section className="udash-summary">
-          <div className="udash-stat">
-            <h3>Catalogue Items</h3>
-            <strong>{resourcesCatalogue.length}</strong>
-          </div>
-          <div className="udash-stat">
-            <h3>My Bookings</h3>
-            <strong>{myBookingsCount}</strong>
-          </div>
-          <div className="udash-stat">
-            <h3>My Open Tickets</h3>
-            <strong>{myOpenTicketsCount}</strong>
-          </div>
+          {summaryCards.map((card) => (
+            <div className="udash-stat" key={card.label}>
+              <h3>{card.label}</h3>
+              <strong>{card.value}</strong>
+              <span className="udash-small">{card.hint}</span>
+            </div>
+          ))}
         </section>
 
         <nav className="udash-tabs" aria-label="Dashboard modules">
@@ -1214,21 +1225,21 @@ const UserDashboard = () => {
             className={activeModule === 'catalogue' ? 'udash-tab udash-tab-active' : 'udash-tab'}
             onClick={() => setActiveModule('catalogue')}
           >
-            Module A: Catalogue
+            Facilities & Assets
           </button>
           <button
             type="button"
             className={activeModule === 'bookings' ? 'udash-tab udash-tab-active' : 'udash-tab'}
             onClick={() => setActiveModule('bookings')}
           >
-            Module B: Bookings
+            Booking Management
           </button>
           <button
             type="button"
             className={activeModule === 'tickets' ? 'udash-tab udash-tab-active' : 'udash-tab'}
             onClick={() => setActiveModule('tickets')}
           >
-            Module C: Tickets
+            Maintenance & Ticketing
           </button>
         </nav>
 
@@ -1630,7 +1641,7 @@ const UserDashboard = () => {
         {activeModule === 'tickets' ? (
           <section className="udash-grid">
             <article className="udash-card">
-              <h2>Create Incident Ticket</h2>
+              <h2>Maintenance & Incident Ticketing</h2>
               <form onSubmit={submitTicket}>
                 <div className="udash-form-grid">
                   <label className="udash-field">
@@ -1802,7 +1813,7 @@ const UserDashboard = () => {
             </article>
 
             <article className="udash-card udash-grid-wide">
-              <h2>{canManageTickets && !ticketFilters.mineOnly ? 'All Tickets' : 'My Tickets'}</h2>
+              <h2>My Tickets</h2>
               <ul className="udash-list">
                 {visibleTickets.map((ticket) => {
                   const commentDraft = ticketCommentDrafts[ticket.id] || '';
