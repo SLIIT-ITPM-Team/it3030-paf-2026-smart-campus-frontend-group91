@@ -14,6 +14,7 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onChange = (event) => {
     const { name, value } = event.target;
@@ -146,19 +147,27 @@ const RegisterPage = () => {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={form.password}
                   onChange={onChange}
                   placeholder="Create a password"
                 />
+                <button
+                  type="button"
+                  className="password-visibility-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
               </div>
               {errors.password ? (
                 <span className="field-error">{errors.password}</span>
               ) : null}
             </label>
 
-            <label className="auth-field" htmlFor="role">
+            {/* <label className="auth-field" htmlFor="role">
               Role
               <div className="auth-input-wrap">
                 <select
@@ -174,7 +183,7 @@ const RegisterPage = () => {
                 </select>
               </div>
               {errors.role ? <span className="field-error">{errors.role}</span> : null}
-            </label>
+            </label> */}
 
             {submitted ? (
               <div className="auth-success">
