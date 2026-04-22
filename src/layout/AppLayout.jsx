@@ -4,7 +4,10 @@ import { useAuth } from '../auth/AuthContext';
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', roles: ['USER', 'TECHNICIAN'] },
   { to: '/user', label: 'User Space', roles: ['USER'] },
+  { to: '/user/bookings', label: 'My Bookings', roles: ['USER'] },
+  { to: '/user/bookings/new', label: 'Book Resource', roles: ['USER'] },
   { to: '/admin', label: 'Admin Dashboard', roles: ['ADMIN'] },
+  { to: '/admin/bookings', label: 'Manage Bookings', roles: ['ADMIN'] },
   { to: '/technician', label: 'Technician Space', roles: ['TECHNICIAN'] },
 ];
 
@@ -47,4 +50,3 @@ const AppLayout = () => {
 };
 
 export default AppLayout;
-
