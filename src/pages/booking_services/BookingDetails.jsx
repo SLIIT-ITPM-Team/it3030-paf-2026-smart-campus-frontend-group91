@@ -39,9 +39,41 @@ const BookingDetails = () => {
     return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(booking.qrCodeValue)}`;
   }, [booking?.qrCodeValue]);
 
+  const canReject = isAdmin && booking?.status === 'PENDING';
+  const canCancel = booking
+    ? (isAdmin ? booking.status === 'APPROVED' : ['PENDING', 'APPROVED'].includes(booking.status))
+    : false;
+
+  const onReject = async () => {
+    if (!booking || !canReject) return;
+
+    const reason = window.prompt('Rejection reason:', 'Rejected by admin.');
+    if (reason === null) return;
+
+    const trimmedReason = String(reason).trim();
+    if (!trimmedReason) {
+      setError('Rejection reason is required.');
+      setMessage('');
+      return;
+    }
+
+    try {
+      const updated = await bookingService.updateBookingStatus(booking.bookingId, 'REJECTED', {
+        reason: trimmedReason,
+        userRole: 'ADMIN',
+      });
+      setBooking(updated);
+      setError('');
+      setMessage('Booking rejected. Notification email has been triggered.');
+    } catch (rejectError) {
+      setMessage('');
+      setError(rejectError?.response?.data?.message || 'Unable to reject this booking.');
+    }
+  };
+
   const onCancel = async () => {
     if (!booking) return;
-    if (!['PENDING', 'APPROVED'].includes(booking.status)) return;
+    if (!canCancel) return;
 
     const reason = window.prompt(
       'Cancellation reason (optional):',
@@ -51,8 +83,10 @@ const BookingDetails = () => {
     try {
       const updated = await bookingService.cancelBooking(booking.bookingId, reason || undefined);
       setBooking(updated);
+      setError('');
       setMessage('Booking cancelled. Confirmation email has been triggered.');
     } catch (cancelError) {
+      setMessage('');
       setError(cancelError?.response?.data?.message || 'Unable to cancel this booking.');
     }
   };
@@ -89,10 +123,19 @@ const BookingDetails = () => {
               <p><strong>Updated At:</strong> {booking.updatedAt ? new Date(booking.updatedAt).toLocaleString() : 'N/A'}</p>
 
               <div className="booking-actions" style={{ marginTop: 8 }}>
+                {canReject ? (
+                  <button
+                    type="button"
+                    className="booking-btn booking-btn-danger"
+                    onClick={onReject}
+                  >
+                    Reject Booking
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="booking-btn booking-btn-danger"
-                  disabled={!['PENDING', 'APPROVED'].includes(booking.status)}
+                  disabled={!canCancel}
                   onClick={onCancel}
                 >
                   Cancel Booking
