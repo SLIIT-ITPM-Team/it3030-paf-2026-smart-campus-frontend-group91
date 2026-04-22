@@ -167,7 +167,7 @@ const BookingFormPage = () => {
 
       setAlert({
         type: 'success',
-        text: `Added to waitlist successfully. Your position is #${entry.position || '-'}.",
+        text: `Added to waitlist successfully. Your position is #${entry.position || '-'}.`,
       });
     } catch (error) {
       setAlert({
