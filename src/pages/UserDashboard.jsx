@@ -1,20 +1,11 @@
-import { useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import bookingService from '../services/bookingService';
+import facilityService from '../services/facilityService';
 
-const RESOURCE_TYPES = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
-const RESOURCE_STATUSES = ['ACTIVE', 'OUT_OF_SERVICE'];
 const BOOKING_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
-const TICKET_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
-const TICKET_STATUSES = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'];
 const ACTIVE_BOOKING_STATUSES = ['PENDING', 'APPROVED'];
-
-const TICKET_TRANSITIONS = {
-  OPEN: ['IN_PROGRESS', 'REJECTED'],
-  IN_PROGRESS: ['RESOLVED', 'REJECTED'],
-  RESOLVED: ['CLOSED'],
-  CLOSED: [],
-  REJECTED: [],
-};
 
 const dateOffset = (days) => {
   const current = new Date();
@@ -35,6 +26,36 @@ const rangesOverlap = (startA, endA, startB, endB) => {
 
 const badgeClass = (value) => {
   return String(value || 'UNKNOWN').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+};
+
+const normalizeTimeForDisplay = (value) => {
+  if (!value) return '';
+  const stringValue = String(value);
+  if (stringValue.includes('T')) {
+    return stringValue.split('T')[1].slice(0, 5);
+  }
+  return stringValue.slice(0, 5);
+};
+
+const mapApiBookingToDashboard = (booking) => {
+  const bookingDate =
+    booking.date || booking.bookingDate || (booking.startTime ? String(booking.startTime).slice(0, 10) : '');
+  return {
+    id: booking.bookingId || booking.id,
+    resourceId: String(booking.resourceId || booking.facilityId || ''),
+    resourceName: booking.resourceName || booking.facilityName || 'Unknown Resource',
+    resourceType: booking.resourceType || booking.type || 'UNKNOWN',
+    resourceLocation: booking.resourceLocation || booking.location || 'N/A',
+    date: bookingDate,
+    startTime: booking.startTimeOnly || normalizeTimeForDisplay(booking.startTime),
+    endTime: booking.endTimeOnly || normalizeTimeForDisplay(booking.endTime),
+    purpose: booking.purpose || '',
+    attendees: booking.attendees ?? booking.expectedAttendees ?? 0,
+    status: booking.status || 'PENDING',
+    decisionReason: booking.decisionReason || booking.rejectionReason || booking.cancellationReason || '',
+    userEmail: booking.userEmail || 'unknown-user@local',
+    requestedBy: booking.userName || 'Campus User',
+  };
 };
 
 const resourcesCatalogue = [
@@ -93,6 +114,9 @@ const resourcesCatalogue = [
     status: 'ACTIVE',
   },
 ];
+
+const RESOURCE_TYPES = [...new Set(resourcesCatalogue.map((resource) => resource.type))];
+const RESOURCE_STATUSES = [...new Set(resourcesCatalogue.map((resource) => resource.status))];
 
 const seedBookings = [
   {
@@ -157,11 +181,10 @@ const seedTickets = [
 ];
 
 const UserDashboard = () => {
-  const { user, hasRoles } = useAuth();
-
-  const isAdmin = hasRoles(['ADMIN']);
-  const isTechnician = hasRoles(['TECHNICIAN']);
-  const canManageTickets = isAdmin || isTechnician;
+  const { user } = useAuth();
+  const isAdmin = false;
+  const canManageTickets = false;
+  const dashboardRoleLabel = 'USER';
 
   const [activeModule, setActiveModule] = useState('catalogue');
 
@@ -228,8 +251,8 @@ const UserDashboard = () => {
     });
   }, [catalogueFilters]);
 
-  const bookingIdRef = useRef(2001);
   const [bookings, setBookings] = useState(seedBookings);
+  const [bookingResources, setBookingResources] = useState(resourcesCatalogue);
   const [bookingForm, setBookingForm] = useState({
     resourceId: '',
     date: '',
@@ -249,8 +272,40 @@ const UserDashboard = () => {
   const [bookingMessage, setBookingMessage] = useState('');
 
   const selectedBookingResource = useMemo(() => {
-    return resourcesCatalogue.find((item) => item.id === bookingForm.resourceId) || null;
-  }, [bookingForm.resourceId]);
+    return bookingResources.find((item) => String(item.id) === String(bookingForm.resourceId)) || null;
+  }, [bookingForm.resourceId, bookingResources]);
+
+  useEffect(() => {
+    const loadBookingData = async () => {
+      try {
+        const [apiResources, apiBookings] = await Promise.all([
+          facilityService.getAllFacilities(),
+          bookingService.getUserBookings(user?.id),
+        ]);
+
+        if (Array.isArray(apiResources) && apiResources.length > 0) {
+          const normalizedResources = apiResources.map((resource) => ({
+            id: String(resource.id),
+            name: resource.name,
+            type: resource.type,
+            capacity: resource.capacity ?? 0,
+            location: resource.location || 'N/A',
+            availability: resource.description || 'Availability managed by admin',
+            status: resource.status || 'ACTIVE',
+          }));
+          setBookingResources(normalizedResources);
+        }
+
+        if (Array.isArray(apiBookings) && apiBookings.length > 0) {
+          setBookings(apiBookings.map(mapApiBookingToDashboard));
+        }
+      } catch (error) {
+        // Fallback to seed data for offline/demo mode.
+      }
+    };
+
+    loadBookingData();
+  }, [user?.id]);
 
   const visibleBookings = useMemo(() => {
     return bookings
@@ -278,7 +333,7 @@ const UserDashboard = () => {
       .sort((a, b) => `${a.date}${a.startTime}`.localeCompare(`${b.date}${b.startTime}`));
   }, [bookings, bookingFilters, isAdmin, user?.email]);
 
-  const submitBooking = (event) => {
+  const submitBooking = async (event) => {
     event.preventDefault();
     setBookingError('');
     setBookingMessage('');
@@ -344,33 +399,32 @@ const UserDashboard = () => {
       return;
     }
 
-    const nextBooking = {
-      id: `BK-${bookingIdRef.current++}`,
-      resourceId: selectedBookingResource.id,
-      resourceName: selectedBookingResource.name,
-      resourceType: selectedBookingResource.type,
-      resourceLocation: selectedBookingResource.location,
-      date: bookingForm.date,
-      startTime: bookingForm.startTime,
-      endTime: bookingForm.endTime,
-      purpose: bookingForm.purpose.trim(),
-      attendees,
-      status: 'PENDING',
-      decisionReason: '',
-      userEmail: user?.email || 'unknown-user@local',
-      requestedBy: displayName,
-    };
+    try {
+      const savedBooking = await bookingService.createBooking({
+        resourceId: Number(selectedBookingResource.id),
+        bookingDate: bookingForm.date,
+        startTime: bookingForm.startTime,
+        endTime: bookingForm.endTime,
+        purpose: bookingForm.purpose.trim(),
+        expectedAttendees: attendees,
+      });
 
-    setBookings((prev) => [nextBooking, ...prev]);
-    setBookingForm({
-      resourceId: '',
-      date: '',
-      startTime: '',
-      endTime: '',
-      purpose: '',
-      attendees: '',
-    });
-    setBookingMessage('Booking request submitted with PENDING status.');
+      const nextBooking = mapApiBookingToDashboard(savedBooking);
+      setBookings((prev) => [nextBooking, ...prev]);
+      setBookingForm({
+        resourceId: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        purpose: '',
+        attendees: '',
+      });
+      setBookingMessage('Booking request submitted and saved to database with PENDING status.');
+    } catch (error) {
+      const backendMessage =
+        error?.response?.data?.message || error?.response?.data?.error || 'Failed to save booking.';
+      setBookingError(backendMessage);
+    }
   };
 
   const approveBooking = (bookingId) => {
@@ -568,7 +622,7 @@ const UserDashboard = () => {
     if (!canManageTickets) {
       return;
     }
-    const fallbackAssignee = isTechnician ? displayName : '';
+    const fallbackAssignee = '';
     const assignee = (ticketInputs[ticketId]?.assignee || fallbackAssignee).trim();
     if (!assignee) {
       setTicketError('Please enter technician/staff assignee before assigning.');
@@ -625,7 +679,7 @@ const UserDashboard = () => {
           assignedTo:
             item.assignedTo ||
             assignee ||
-            (isTechnician ? displayName : item.assignedTo),
+            item.assignedTo,
           resolutionNotes:
             nextStatus === 'RESOLVED' || nextStatus === 'CLOSED'
               ? resolutionNotes || item.resolutionNotes
@@ -719,6 +773,23 @@ const UserDashboard = () => {
       ticket.reporterEmail === user?.email &&
       ['OPEN', 'IN_PROGRESS', 'RESOLVED'].includes(ticket.status),
   ).length;
+  const summaryCards = [
+    {
+      label: 'Catalogue Items',
+      value: resourcesCatalogue.length,
+      hint: 'Facilities and assets available in the system.',
+    },
+    {
+      label: 'My Bookings',
+      value: myBookingsCount,
+      hint: 'Current and past booking requests.',
+    },
+    {
+      label: 'My Open Tickets',
+      value: myOpenTicketsCount,
+      hint: 'Tickets still in OPEN, IN_PROGRESS, or RESOLVED.',
+    },
+  ];
 
   return (
     <section className="udash-root">
@@ -1134,23 +1205,18 @@ const UserDashboard = () => {
           </p>
           <div className="udash-meta-row">
             <span className="udash-pill">{today}</span>
-            <span className="udash-pill">Role: {isAdmin ? 'ADMIN' : isTechnician ? 'TECHNICIAN' : 'USER'}</span>
+            <span className="udash-pill">Role: {dashboardRoleLabel}</span>
           </div>
         </header>
 
         <section className="udash-summary">
-          <div className="udash-stat">
-            <h3>Catalogue Items</h3>
-            <strong>{resourcesCatalogue.length}</strong>
-          </div>
-          <div className="udash-stat">
-            <h3>My Bookings</h3>
-            <strong>{myBookingsCount}</strong>
-          </div>
-          <div className="udash-stat">
-            <h3>My Open Tickets</h3>
-            <strong>{myOpenTicketsCount}</strong>
-          </div>
+          {summaryCards.map((card) => (
+            <div className="udash-stat" key={card.label}>
+              <h3>{card.label}</h3>
+              <strong>{card.value}</strong>
+              <span className="udash-small">{card.hint}</span>
+            </div>
+          ))}
         </section>
 
         <nav className="udash-tabs" aria-label="Dashboard modules">
@@ -1159,21 +1225,21 @@ const UserDashboard = () => {
             className={activeModule === 'catalogue' ? 'udash-tab udash-tab-active' : 'udash-tab'}
             onClick={() => setActiveModule('catalogue')}
           >
-            Module A: Catalogue
+            Facilities & Assets
           </button>
           <button
             type="button"
             className={activeModule === 'bookings' ? 'udash-tab udash-tab-active' : 'udash-tab'}
             onClick={() => setActiveModule('bookings')}
           >
-            Module B: Bookings
+            Booking Management
           </button>
           <button
             type="button"
             className={activeModule === 'tickets' ? 'udash-tab udash-tab-active' : 'udash-tab'}
             onClick={() => setActiveModule('tickets')}
           >
-            Module C: Tickets
+            Maintenance & Ticketing
           </button>
         </nav>
 
@@ -1300,7 +1366,7 @@ const UserDashboard = () => {
                       }
                     >
                       <option value="">Select a resource</option>
-                      {resourcesCatalogue.map((item) => (
+                      {bookingResources.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.name} ({item.type})
                         </option>
@@ -1313,11 +1379,40 @@ const UserDashboard = () => {
                     <input
                       className="udash-input"
                       type="date"
+                      min={new Date().toISOString().slice(0, 10)}
                       value={bookingForm.date}
                       onChange={(event) =>
                         setBookingForm((prev) => ({ ...prev, date: event.target.value }))
                       }
                     />
+                    <div className="udash-actions" style={{ marginTop: '8px' }}>
+                      <button
+                        type="button"
+                        className="udash-btn"
+                        onClick={() =>
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            date: new Date().toISOString().slice(0, 10),
+                          }))
+                        }
+                      >
+                        Today
+                      </button>
+                      <button
+                        type="button"
+                        className="udash-btn"
+                        onClick={() => {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          setBookingForm((prev) => ({
+                            ...prev,
+                            date: tomorrow.toISOString().slice(0, 10),
+                          }));
+                        }}
+                      >
+                        Tomorrow
+                      </button>
+                    </div>
                   </label>
 
                   <label className="udash-field">
@@ -1338,6 +1433,8 @@ const UserDashboard = () => {
                     <input
                       className="udash-input"
                       type="time"
+                      step="300"
+                      placeholder="HH:MM"
                       value={bookingForm.startTime}
                       onChange={(event) =>
                         setBookingForm((prev) => ({ ...prev, startTime: event.target.value }))
@@ -1350,6 +1447,8 @@ const UserDashboard = () => {
                     <input
                       className="udash-input"
                       type="time"
+                      step="300"
+                      placeholder="HH:MM"
                       value={bookingForm.endTime}
                       onChange={(event) =>
                         setBookingForm((prev) => ({ ...prev, endTime: event.target.value }))
@@ -1542,7 +1641,7 @@ const UserDashboard = () => {
         {activeModule === 'tickets' ? (
           <section className="udash-grid">
             <article className="udash-card">
-              <h2>Create Incident Ticket</h2>
+              <h2>Maintenance & Incident Ticketing</h2>
               <form onSubmit={submitTicket}>
                 <div className="udash-form-grid">
                   <label className="udash-field">
@@ -1714,7 +1813,7 @@ const UserDashboard = () => {
             </article>
 
             <article className="udash-card udash-grid-wide">
-              <h2>{canManageTickets && !ticketFilters.mineOnly ? 'All Tickets' : 'My Tickets'}</h2>
+              <h2>My Tickets</h2>
               <ul className="udash-list">
                 {visibleTickets.map((ticket) => {
                   const commentDraft = ticketCommentDrafts[ticket.id] || '';
