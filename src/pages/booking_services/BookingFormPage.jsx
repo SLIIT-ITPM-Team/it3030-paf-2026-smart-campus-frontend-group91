@@ -213,10 +213,15 @@ const BookingFormPage = () => {
         });
       }, 700);
     } catch (error) {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (typeof error?.response?.data === 'string' ? error.response.data : '');
+
       setAlert({
         type: 'error',
         text:
-          error?.response?.data?.message ||
+          backendMessage ||
           'Booking could not be submitted because the slot is unavailable or invalid.',
       });
     } finally {
