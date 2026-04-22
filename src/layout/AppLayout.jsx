@@ -2,10 +2,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 
 const NAV_ITEMS = [
-  { to: '/dashboard', label: 'Dashboard', roles: ['USER', 'TECHNICIAN'] },
   { to: '/user', label: 'User Space', roles: ['USER'] },
   { to: '/admin', label: 'Admin Dashboard', roles: ['ADMIN'] },
-  { to: '/technician', label: 'Technician Space', roles: ['TECHNICIAN'] },
+  { to: '/technician', label: 'Technician Dashboard', roles: ['TECHNICIAN'] },
 ];
 
 const AppLayout = () => {

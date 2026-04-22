@@ -7,7 +7,7 @@ import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import OAuthCallbackPage from '../pages/OAuthCallbackPage';
 import RegisterPage from '../pages/RegisterPage';
-import RolePage from '../pages/RolePage';
+import TechnicianDashboard from '../pages/TechnicianDashboard';
 import UserDashboard from '../pages/UserDashboard';
 import ProtectedRoute from './ProtectedRoute';
 import PublicOnlyRoute from './PublicOnlyRoute';
@@ -16,6 +16,7 @@ import RoleRoute from './RoleRoute';
 const DashboardEntry = () => {
   const { hasRoles } = useAuth();
   const isAdmin = hasRoles(['ADMIN']);
+  const isTechnician = hasRoles(['TECHNICIAN']);
   const isUserOnly = hasRoles(['USER']) && !hasRoles(['ADMIN', 'TECHNICIAN']);
 
   if (isAdmin) {
@@ -24,6 +25,10 @@ const DashboardEntry = () => {
 
   if (isUserOnly) {
     return <Navigate to="/user" replace />;
+  }
+
+  if (isTechnician) {
+    return <Navigate to="/technician" replace />;
   }
 
   return <App />;
@@ -62,12 +67,7 @@ const AppRouter = () => {
           <Route element={<RoleRoute allowedRoles={['TECHNICIAN']} />}>
             <Route
               path="/technician"
-              element={
-                <RolePage
-                  title="Technician Space"
-                  description="This page is restricted to TECHNICIAN role members."
-                />
-              }
+              element={<TechnicianDashboard />}
             />
           </Route>
         </Route>
