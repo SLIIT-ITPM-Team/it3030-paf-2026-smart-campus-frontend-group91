@@ -3,8 +3,12 @@ import { useAuth } from '../auth/AuthContext';
 
 const NAV_ITEMS = [
   { to: '/user', label: 'User Space', roles: ['USER'] },
+  { to: '/user/bookings', label: 'My Bookings', roles: ['USER'] },
+  { to: '/user/bookings/new', label: 'Book Resource', roles: ['USER'] },
   { to: '/admin', label: 'Admin Dashboard', roles: ['ADMIN'] },
   { to: '/technician', label: 'Technician Dashboard', roles: ['TECHNICIAN'] },
+  { to: '/admin/bookings', label: 'Manage Bookings', roles: ['ADMIN'] },
+  { to: '/technician', label: 'Technician Space', roles: ['TECHNICIAN'] },
 ];
 
 const AppLayout = () => {
@@ -46,4 +50,3 @@ const AppLayout = () => {
 };
 
 export default AppLayout;
-

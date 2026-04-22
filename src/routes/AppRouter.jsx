@@ -3,6 +3,10 @@ import App from '../App';
 import { useAuth } from '../auth/AuthContext';
 import AppLayout from '../layout/AppLayout';
 import AdminDashboard from '../pages/AdminDashboard';
+import AdminBookingManagementPage from '../pages/booking_services/AdminBookings';
+import UserBookingManagementPage from '../pages/booking_services/StudentBooking';
+import BookingDetails from '../pages/booking_services/BookingDetails';
+import BookingFormPage from '../pages/booking_services/BookingFormPage';
 import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import OAuthCallbackPage from '../pages/OAuthCallbackPage';
@@ -54,6 +58,39 @@ const AppRouter = () => {
             <Route
               path="/user"
               element={<UserDashboard />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
+            <Route
+              path="/admin/bookings"
+              element={<AdminBookingManagementPage />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['USER']} />}>
+            <Route
+              path="/user/bookings"
+              element={<UserBookingManagementPage />}
+            />
+            <Route
+              path="/user/bookings/new"
+              element={<BookingFormPage />}
+            />
+            <Route
+              path="/booking/:bookingId"
+              element={<BookingDetails />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
+            <Route
+              path="/admin/bookings"
+              element={<AdminBookingManagementPage />}
+            />
+            <Route
+              path="/admin/booking/:bookingId"
+              element={<BookingDetails />}
             />
           </Route>
 
