@@ -13,6 +13,7 @@ import OAuthCallbackPage from '../pages/OAuthCallbackPage';
 import RegisterPage from '../pages/RegisterPage';
 import TechnicianDashboard from '../pages/TechnicianDashboard';
 import UserDashboard from '../pages/UserDashboard';
+import TicketsPage from '../pages/TicketsPage';
 import ProtectedRoute from './ProtectedRoute';
 import PublicOnlyRoute from './PublicOnlyRoute';
 import RoleRoute from './RoleRoute';
@@ -105,6 +106,24 @@ const AppRouter = () => {
             <Route
               path="/technician"
               element={<TechnicianDashboard />}
+            />
+            <Route
+              path="/technician/tickets"
+              element={<TicketsPage />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['USER']} />}>
+            <Route
+              path="/user/tickets"
+              element={<TicketsPage />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
+            <Route
+              path="/admin/tickets"
+              element={<TicketsPage />}
             />
           </Route>
         </Route>
