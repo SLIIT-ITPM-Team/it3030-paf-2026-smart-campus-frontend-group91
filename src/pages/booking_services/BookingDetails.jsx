@@ -104,9 +104,31 @@ const BookingDetails = () => {
   return (
     <section className="booking-page">
       <div className="booking-container">
-        <div className="booking-card">
-          <h1 className="booking-title">Booking Details</h1>
-          <p className="booking-sub">Review full booking details and QR check-in information.</p>
+        <div className="booking-hero">
+          <div className="booking-hero-kicker">Booking Information</div>
+          <div className="booking-hero-row">
+            <div>
+              <h1 className="booking-title">Booking Details</h1>
+              <p className="booking-sub">Review full booking details and QR check-in information.</p>
+            </div>
+            {booking && (
+              <div className="booking-hero-badge">
+                <span className="booking-pill" style={{ 
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '6px 14px',
+                  fontWeight: '600',
+                  letterSpacing: '0.02em'
+                }}>
+                  ID: #{booking.bookingId}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? <div className="booking-alert booking-alert-info">Loading booking details...</div> : null}
