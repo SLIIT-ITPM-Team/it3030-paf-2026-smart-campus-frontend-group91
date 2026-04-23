@@ -62,7 +62,17 @@ const StudentBooking = () => {
             <h1 className="booking-title">My Bookings</h1>
             <p className="booking-sub">Track your resource bookings and view current status updates.</p>
           </div>
-          <div className="booking-pill booking-hero-badge">
+          <div className="booking-pill booking-hero-badge" style={{ 
+            background: 'rgba(255, 255, 255, 0.15)',
+            color: '#ffffff',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            padding: '6px 14px',
+            fontWeight: '600',
+            letterSpacing: '0.02em'
+          }}>
             {bookingStats.total} {bookingStats.total === 1 ? 'booking' : 'bookings'}
           </div>
         </div>
