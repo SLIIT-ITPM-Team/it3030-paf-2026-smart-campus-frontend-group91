@@ -4,12 +4,6 @@ import api from '../api/api';
 
 const ROLE_OPTIONS = ['USER', 'TECHNICIAN', 'ADMIN'];
 
-const INITIAL_FORM = {
-  username: '',
-  email: '',
-  role: '',
-};
-
 const extractErrorMessage = (error, fallback) => {
   const message =
     error?.response?.data?.message ||
@@ -21,10 +15,12 @@ const extractErrorMessage = (error, fallback) => {
 
 const mapUserFromApi = (item) => {
   const role = item?.role || item?.roles?.[0] || 'USER';
-  const userId = item?.id ?? item?.userId ?? item?.username ?? item?.email;
+  const userId = item?.id ?? item?.userId;
+  const fallbackKey = item?.username ?? item?.email ?? 'unknown-user';
 
   return {
-    id: String(userId),
+    id: userId == null ? '' : String(userId),
+    rowKey: String(userId ?? fallbackKey),
     username: item?.username || item?.name || '',
     email: item?.email || '',
     role: String(role).toUpperCase(),
@@ -34,14 +30,15 @@ const mapUserFromApi = (item) => {
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState('');
-  const [showAddPanel, setShowAddPanel] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  const [isSavingUser, setIsSavingUser] = useState(false);
   const [tableError, setTableError] = useState('');
+  const [actionMessage, setActionMessage] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [editingUserId, setEditingUserId] = useState('');
+  const [draftRole, setDraftRole] = useState('');
+  const [updatingUserId, setUpdatingUserId] = useState('');
+  const [deletingUserId, setDeletingUserId] = useState('');
 
   const adminName = useMemo(() => {
     return user?.name || user?.fullName || user?.username || user?.email || 'Administrator';
@@ -55,6 +52,8 @@ const AdminDashboard = () => {
       const response = await api.get('/admin/users');
       const payload = Array.isArray(response?.data) ? response.data : [];
       setUsers(payload.map(mapUserFromApi));
+      setEditingUserId('');
+      setDraftRole('');
     } catch (error) {
       setTableError(extractErrorMessage(error, 'Unable to load users from backend.'));
       setUsers([]);
@@ -85,75 +84,73 @@ const AdminDashboard = () => {
     }, {});
   }, [users]);
 
-  const openAddPanel = () => {
-    setShowAddPanel(true);
-    setErrors({});
-    setMessage('');
+  const startRoleEdit = (item) => {
+    setActionError('');
+    setActionMessage('');
+    setEditingUserId(item.id);
+    setDraftRole(item.role);
   };
 
-  const closeAddPanel = () => {
-    setShowAddPanel(false);
-    setForm(INITIAL_FORM);
-    setErrors({});
-    setMessage('');
+  const cancelRoleEdit = () => {
+    setEditingUserId('');
+    setDraftRole('');
   };
 
-  const onFieldChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: '' }));
-    setMessage('');
-  };
-
-  const validateForm = () => {
-    const nextErrors = {};
-    const username = form.username.trim();
-    const email = form.email.trim().toLowerCase();
-
-    if (!username) {
-      nextErrors.username = 'Username is required.';
-    }
-
-    if (!email) {
-      nextErrors.email = 'Email is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      nextErrors.email = 'Please enter a valid email.';
-    } else if (users.some((item) => item.email.toLowerCase() === email)) {
-      nextErrors.email = 'This email is already in the table.';
-    }
-
-    if (!form.role) {
-      nextErrors.role = 'Role is required.';
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const onAddUser = async (event) => {
-    event.preventDefault();
-    if (!validateForm()) {
+  const updateUserRole = async (item) => {
+    if (!item.id) {
       return;
     }
 
-    setIsSavingUser(true);
-    setMessage('');
+    if (!draftRole || draftRole === item.role) {
+      cancelRoleEdit();
+      return;
+    }
+
+    setUpdatingUserId(item.id);
+    setActionError('');
+    setActionMessage('');
 
     try {
-      await api.post('/admin/users', {
-        username: form.username.trim(),
-        email: form.email.trim().toLowerCase(),
-        role: form.role,
-      });
+      const response = await api.patch(`/admin/users/${item.id}/role`, { role: draftRole });
+      const updatedUser = mapUserFromApi(response?.data ?? { ...item, role: draftRole });
 
-      await loadUsers();
-      setForm(INITIAL_FORM);
-      setErrors({});
-      setMessage(`User "${form.username.trim()}" added successfully.`);
+      setUsers((prev) => prev.map((userItem) => (userItem.id === item.id ? updatedUser : userItem)));
+      setActionMessage(`Role updated for "${updatedUser.username}".`);
+      cancelRoleEdit();
     } catch (error) {
-      setMessage(extractErrorMessage(error, 'Unable to create user.'));
+      setActionError(extractErrorMessage(error, 'Unable to update role.'));
     } finally {
-      setIsSavingUser(false);
+      setUpdatingUserId('');
+    }
+  };
+
+  const deleteUser = async (item) => {
+    if (!item.id) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(`Delete user "${item.username}"?`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    setDeletingUserId(item.id);
+    setActionError('');
+    setActionMessage('');
+
+    try {
+      await api.delete(`/admin/users/${item.id}`);
+      setUsers((prev) => prev.filter((userItem) => userItem.id !== item.id));
+
+      if (editingUserId === item.id) {
+        cancelRoleEdit();
+      }
+
+      setActionMessage(`User "${item.username}" deleted successfully.`);
+    } catch (error) {
+      setActionError(extractErrorMessage(error, 'Unable to delete user.'));
+    } finally {
+      setDeletingUserId('');
     }
   };
 
@@ -260,7 +257,7 @@ const AdminDashboard = () => {
 
           .adash-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+            grid-template-columns: 1fr;
             gap: 14px;
           }
 
@@ -351,26 +348,10 @@ const AdminDashboard = () => {
             border-color: #000000;
           }
 
-          .adash-form {
-            margin-top: 12px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-          }
-
-          .adash-field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            color: #0f172a;
-            font-size: 14px;
-            font-weight: 600;
-          }
-
-          .adash-error {
-            color: #000000;
-            font-size: 12px;
-            font-weight: 500;
+          .adash-btn-sm {
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 8px;
           }
 
           .adash-message {
@@ -381,6 +362,12 @@ const AdminDashboard = () => {
             color: #1e40af;
             padding: 10px 12px;
             font-size: 14px;
+          }
+
+          .adash-message-error {
+            border-color: rgba(239, 68, 68, 0.35);
+            background: rgba(254, 226, 226, 0.75);
+            color: #b91c1c;
           }
 
           .adash-table-wrap {
@@ -424,6 +411,31 @@ const AdminDashboard = () => {
             padding: 4px 10px;
           }
 
+          .adash-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .adash-select-inline {
+            min-width: 140px;
+            padding: 6px 8px;
+            font-size: 13px;
+          }
+
+          .adash-btn-delete {
+            border-color: rgba(220, 38, 38, 0.3);
+            color: #b91c1c;
+            background: #ffffff;
+          }
+
+          .adash-btn-delete:hover {
+            border-color: rgba(185, 28, 28, 0.55);
+            background: #fef2f2;
+            color: #991b1b;
+          }
+
           .adash-empty {
             text-align: center;
             color: #334155;
@@ -457,10 +469,6 @@ const AdminDashboard = () => {
             .adash-summary {
               grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-
-            .adash-grid {
-              grid-template-columns: 1fr;
-            }
           }
 
           @media (max-width: 620px) {
@@ -476,8 +484,8 @@ const AdminDashboard = () => {
           <p className="adash-kicker">Admin Dashboard</p>
           <h1>Campus User Management</h1>
           <p>
-            Manage user accounts from a single control panel with a clean table view and quick user
-            creation flow.
+            Manage user accounts from a single control panel with quick role updates and safe account
+            removal actions.
           </p>
           <div className="adash-meta-row">
             <span className="adash-pill">Signed in as: {adminName}</span>
@@ -509,14 +517,11 @@ const AdminDashboard = () => {
             <div className="adash-row">
               <div>
                 <h2>User Table</h2>
-                <p className="adash-sub">Search and review existing user accounts.</p>
+                <p className="adash-sub">Search, update roles, and remove user accounts.</p>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button type="button" className="adash-btn adash-btn-outline" onClick={loadUsers}>
                   Refresh
-                </button>
-                <button type="button" className="adash-btn" onClick={openAddPanel}>
-                  Add User
                 </button>
               </div>
             </div>
@@ -530,7 +535,9 @@ const AdminDashboard = () => {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
-            {tableError ? <div className="adash-message">{tableError}</div> : null}
+            {tableError ? <div className="adash-message adash-message-error">{tableError}</div> : null}
+            {actionError ? <div className="adash-message adash-message-error">{actionError}</div> : null}
+            {actionMessage ? <div className="adash-message">{actionMessage}</div> : null}
 
             <div className="adash-table-wrap">
               <table className="adash-table">
@@ -539,28 +546,82 @@ const AdminDashboard = () => {
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {isLoadingUsers ? (
                     <tr>
-                      <td colSpan={3} className="adash-empty">
+                      <td colSpan={4} className="adash-empty">
                         Loading users...
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="adash-empty">
+                      <td colSpan={4} className="adash-empty">
                         No users found.
                       </td>
                     </tr>
                   ) : (
                     filteredUsers.map((item) => (
-                      <tr key={item.id}>
+                      <tr key={item.rowKey}>
                         <td>{item.username}</td>
                         <td>{item.email}</td>
                         <td>
                           <span className="adash-role">{item.role}</span>
+                        </td>
+                        <td>
+                          {editingUserId === item.id ? (
+                            <div className="adash-actions">
+                              <select
+                                className="adash-select adash-select-inline"
+                                value={draftRole}
+                                onChange={(event) => setDraftRole(event.target.value)}
+                                disabled={updatingUserId === item.id}
+                              >
+                                {ROLE_OPTIONS.map((role) => (
+                                  <option key={role} value={role}>
+                                    {role}
+                                  </option>
+                                ))}
+                              </select>
+                              <button
+                                type="button"
+                                className="adash-btn adash-btn-sm"
+                                onClick={() => updateUserRole(item)}
+                                disabled={updatingUserId === item.id}
+                              >
+                                {updatingUserId === item.id ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                type="button"
+                                className="adash-btn adash-btn-outline adash-btn-sm"
+                                onClick={cancelRoleEdit}
+                                disabled={updatingUserId === item.id}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="adash-actions">
+                              <button
+                                type="button"
+                                className="adash-btn adash-btn-outline adash-btn-sm"
+                                onClick={() => startRoleEdit(item)}
+                                disabled={Boolean(updatingUserId || deletingUserId) || !item.id}
+                              >
+                                Edit Role
+                              </button>
+                              <button
+                                type="button"
+                                className="adash-btn adash-btn-sm adash-btn-delete"
+                                onClick={() => deleteUser(item)}
+                                disabled={deletingUserId === item.id || Boolean(updatingUserId) || !item.id}
+                              >
+                                {deletingUserId === item.id ? 'Deleting...' : 'Delete'}
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -569,96 +630,6 @@ const AdminDashboard = () => {
               </table>
             </div>
           </article>
-
-          <aside className="adash-card">
-            <div className="adash-row">
-              <h2>Add New User</h2>
-              {showAddPanel ? (
-                <button type="button" className="adash-btn adash-btn-outline" onClick={closeAddPanel}>
-                  Close
-                </button>
-              ) : null}
-            </div>
-            <p className="adash-sub">
-              Click the Add User button to open fields for username, email, and role.
-            </p>
-
-            {showAddPanel ? (
-              <form className="adash-form" onSubmit={onAddUser} noValidate>
-                <label className="adash-field" htmlFor="admin-username">
-                  Username
-                  <input
-                    id="admin-username"
-                    name="username"
-                    type="text"
-                    className="adash-input"
-                    value={form.username}
-                    onChange={onFieldChange}
-                    placeholder="Enter username"
-                  />
-                  {errors.username ? <span className="adash-error">{errors.username}</span> : null}
-                </label>
-
-                <label className="adash-field" htmlFor="admin-email">
-                  Email
-                  <input
-                    id="admin-email"
-                    name="email"
-                    type="email"
-                    className="adash-input"
-                    value={form.email}
-                    onChange={onFieldChange}
-                    placeholder="Enter email"
-                  />
-                  {errors.email ? <span className="adash-error">{errors.email}</span> : null}
-                </label>
-
-                <label className="adash-field" htmlFor="admin-role">
-                  Role
-                  <select
-                    id="admin-role"
-                    name="role"
-                    className="adash-select"
-                    value={form.role}
-                    onChange={onFieldChange}
-                  >
-                    <option value="">Select role</option>
-                    {ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.role ? <span className="adash-error">{errors.role}</span> : null}
-                </label>
-
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button type="submit" className="adash-btn" disabled={isSavingUser}>
-                    {isSavingUser ? 'Saving...' : 'Save User'}
-                  </button>
-                  <button
-                    type="button"
-                    className="adash-btn adash-btn-outline"
-                    onClick={() => {
-                      setForm(INITIAL_FORM);
-                      setErrors({});
-                      setMessage('');
-                    }}
-                  >
-                    Clear
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div style={{ marginTop: '12px' }}>
-                <button type="button" className="adash-btn" onClick={openAddPanel}>
-                  Add User
-                </button>
-              </div>
-            )}
-
-            {message ? <div className="adash-message">{message}</div> : null}
-          </aside>
         </section>
       </div>
     </section>
