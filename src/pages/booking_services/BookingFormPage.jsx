@@ -121,6 +121,8 @@ const BookingFormPage = () => {
     };
   }, [form.resourceId, form.bookingDate, form.startTime, form.endTime]);
 
+  
+//validation add 
   const validate = () => {
     const nextErrors = {};
 
@@ -138,6 +140,18 @@ const BookingFormPage = () => {
       nextErrors.expectedAttendees = `Attendees exceed capacity (${selectedResource.capacity}).`;
     }
 
+    if (form.startTime) {
+      if (form.startTime < '07:00' || form.startTime > '20:00') {
+        nextErrors.startTime = 'Start time must be between 07:00 AM and 08:00 PM.';
+      }
+    }
+
+    if (form.endTime) {
+      if (form.endTime < '07:00' || form.endTime > '20:00') {
+        nextErrors.endTime = 'End time must be between 07:00 AM and 08:00 PM.';
+      }
+    }
+
     if (form.startTime && form.endTime && !compareTime(form.startTime, form.endTime)) {
       nextErrors.endTime = 'End time must be after start time.';
     }
@@ -153,6 +167,11 @@ const BookingFormPage = () => {
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
+
+
+
+
+
 
   const onFieldChange = (event) => {
     const { name, value } = event.target;
@@ -318,6 +337,8 @@ const BookingFormPage = () => {
               id="startTime"
               name="startTime"
               type="time"
+              min="07:00"
+              max="20:00"
               className="booking-input"
               value={form.startTime}
               onChange={onFieldChange}
@@ -331,6 +352,8 @@ const BookingFormPage = () => {
               id="endTime"
               name="endTime"
               type="time"
+              min="07:00"
+              max="20:00"
               className="booking-input"
               value={form.endTime}
               onChange={onFieldChange}

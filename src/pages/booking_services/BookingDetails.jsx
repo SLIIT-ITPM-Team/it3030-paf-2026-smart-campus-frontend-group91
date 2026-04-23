@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../auth/AuthContext';
 import bookingService from '../../services/bookingService';
 import { bookingBadgeClass, normalizeTime } from './bookingUiUtils';
@@ -34,10 +35,19 @@ const BookingDetails = () => {
     loadBooking();
   }, [bookingId]);
 
-  const qrUrl = useMemo(() => {
-    if (!booking?.qrCodeValue) return '';
-    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(booking.qrCodeValue)}`;
-  }, [booking?.qrCodeValue]);
+  const qrRef = useRef(null);
+
+  const downloadQR = () => {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pngUrl;
+    downloadLink.download = `booking-${booking.bookingId}-qr.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
 
   const canReject = isAdmin && booking?.status === 'PENDING';
   const canCancel = booking
@@ -152,16 +162,24 @@ const BookingDetails = () => {
 
             <div className="booking-col-4">
               <h3 style={{ marginTop: 0 }}>QR Check-In</h3>
-              {booking.status === 'APPROVED' && qrUrl ? (
+              {booking.status === 'APPROVED' ? (
                 <>
-                  <img className="booking-qr" src={qrUrl} alt="Booking QR code" />
-                  <p className="booking-sub" style={{ marginTop: 8 }}>
+                  <div ref={qrRef} style={{ display: 'inline-block', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <QRCodeCanvas 
+                      value={`Booking ID: #${booking.bookingId}\nUser: ${booking.userName || 'N/A'}\nHall: ${booking.resourceName || 'N/A'}\nTime: ${booking.date} from ${normalizeTime(booking.startTime)} to ${normalizeTime(booking.endTime)}`} 
+                      size={500} 
+                      level="H" 
+                      includeMargin={true}
+                      style={{ width: 200, height: 200, display: 'block' }}
+                    />
+                  </div>
+                  <p className="booking-sub" style={{ marginTop: 12 }}>
                     This QR is valid only for the approved date/time slot.
                   </p>
                   <div className="booking-actions">
-                    <a className="booking-btn" href={qrUrl} download={`booking-${booking.bookingId}-qr.png`}>
+                    <button type="button" className="booking-btn" onClick={downloadQR}>
                       Download QR
-                    </a>
+                    </button>
                   </div>
                 </>
               ) : (
