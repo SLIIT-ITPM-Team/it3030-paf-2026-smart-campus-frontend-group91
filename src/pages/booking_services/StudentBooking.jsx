@@ -6,11 +6,25 @@ import bookingService from '../../services/bookingService';
 import { normalizeTime } from './bookingUiUtils';
 import './booking.css';
 
+const parseTimeToMinutes = (value) => {
+  const normalized = normalizeTime(value);
+  if (!normalized) return null;
+
+  const [hoursText, minutesText] = normalized.split(':');
+  const hours = Number(hoursText);
+  const mins = Number(minutesText);
+
+  if (!Number.isFinite(hours) || !Number.isFinite(mins)) return null;
+  return hours * 60 + mins;
+};
+
 const formatDuration = (start, end) => {
-  if (!start || !end) return '-';
-  const [sH, sM] = start.split(':').map(Number);
-  const [eH, eM] = end.split(':').map(Number);
-  let diffMins = (eH * 60 + eM) - (sH * 60 + sM);
+  const startMins = parseTimeToMinutes(start);
+  const endMins = parseTimeToMinutes(end);
+
+  if (startMins === null || endMins === null) return '-';
+
+  let diffMins = endMins - startMins;
   if (diffMins < 0) diffMins += 24 * 60;
   const hours = Math.floor(diffMins / 60);
   const mins = diffMins % 60;
