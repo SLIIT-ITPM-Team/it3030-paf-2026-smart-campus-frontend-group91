@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import api from '../api/api';
 
 const ROLE_OPTIONS = ['USER', 'TECHNICIAN', 'ADMIN'];
 
@@ -9,31 +10,62 @@ const INITIAL_FORM = {
   role: '',
 };
 
-const INITIAL_USERS = [
-  { id: 'USR-001', username: 'john.smith', email: 'john@smartcampus.edu', role: 'USER' },
-  { id: 'USR-002', username: 'nethmi.tech', email: 'nethmi@smartcampus.edu', role: 'TECHNICIAN' },
-  { id: 'USR-003', username: 'admin.main', email: 'admin@smartcampus.edu', role: 'ADMIN' },
-];
+const extractErrorMessage = (error, fallback) => {
+  const message =
+    error?.response?.data?.message ||
+    error?.response?.data?.error ||
+    error?.message;
 
-const createId = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return typeof message === 'string' && message.trim() ? message : fallback;
+};
+
+const mapUserFromApi = (item) => {
+  const role = item?.role || item?.roles?.[0] || 'USER';
+  const userId = item?.id ?? item?.userId ?? item?.username ?? item?.email;
+
+  return {
+    id: String(userId),
+    username: item?.username || item?.name || '',
+    email: item?.email || '',
+    role: String(role).toUpperCase(),
+  };
 };
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
   const [showAddPanel, setShowAddPanel] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [isSavingUser, setIsSavingUser] = useState(false);
+  const [tableError, setTableError] = useState('');
 
   const adminName = useMemo(() => {
     return user?.name || user?.fullName || user?.username || user?.email || 'Administrator';
   }, [user]);
+
+  const loadUsers = useCallback(async () => {
+    setIsLoadingUsers(true);
+    setTableError('');
+
+    try {
+      const response = await api.get('/admin/users');
+      const payload = Array.isArray(response?.data) ? response.data : [];
+      setUsers(payload.map(mapUserFromApi));
+    } catch (error) {
+      setTableError(extractErrorMessage(error, 'Unable to load users from backend.'));
+      setUsers([]);
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const filteredUsers = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -98,28 +130,31 @@ const AdminDashboard = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const onAddUser = (event) => {
+  const onAddUser = async (event) => {
     event.preventDefault();
     if (!validateForm()) {
       return;
     }
 
-    const nextUser = {
-      id: createId(),
-      username: form.username.trim(),
-      email: form.email.trim().toLowerCase(),
-      role: form.role,
-    };
+    setIsSavingUser(true);
+    setMessage('');
 
-    setUsers((prev) => [nextUser, ...prev]);
-    setForm(INITIAL_FORM);
-    setErrors({});
-    setMessage(`User "${nextUser.username}" added successfully.`);
-  };
+    try {
+      await api.post('/admin/users', {
+        username: form.username.trim(),
+        email: form.email.trim().toLowerCase(),
+        role: form.role,
+      });
 
-  const onRemoveUser = (userId) => {
-    setUsers((prev) => prev.filter((item) => item.id !== userId));
-    setMessage('User removed from the table.');
+      await loadUsers();
+      setForm(INITIAL_FORM);
+      setErrors({});
+      setMessage(`User "${form.username.trim()}" added successfully.`);
+    } catch (error) {
+      setMessage(extractErrorMessage(error, 'Unable to create user.'));
+    } finally {
+      setIsSavingUser(false);
+    }
   };
 
   return (
@@ -476,9 +511,14 @@ const AdminDashboard = () => {
                 <h2>User Table</h2>
                 <p className="adash-sub">Search and review existing user accounts.</p>
               </div>
-              <button type="button" className="adash-btn" onClick={openAddPanel}>
-                Add User
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button type="button" className="adash-btn adash-btn-outline" onClick={loadUsers}>
+                  Refresh
+                </button>
+                <button type="button" className="adash-btn" onClick={openAddPanel}>
+                  Add User
+                </button>
+              </div>
             </div>
 
             <div style={{ marginTop: '12px' }}>
@@ -490,6 +530,7 @@ const AdminDashboard = () => {
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
+            {tableError ? <div className="adash-message">{tableError}</div> : null}
 
             <div className="adash-table-wrap">
               <table className="adash-table">
@@ -498,13 +539,18 @@ const AdminDashboard = () => {
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.length === 0 ? (
+                  {isLoadingUsers ? (
                     <tr>
-                      <td colSpan={4} className="adash-empty">
+                      <td colSpan={3} className="adash-empty">
+                        Loading users...
+                      </td>
+                    </tr>
+                  ) : filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="adash-empty">
                         No users found.
                       </td>
                     </tr>
@@ -515,15 +561,6 @@ const AdminDashboard = () => {
                         <td>{item.email}</td>
                         <td>
                           <span className="adash-role">{item.role}</span>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="adash-btn adash-btn-danger"
-                            onClick={() => onRemoveUser(item.id)}
-                          >
-                            Remove
-                          </button>
                         </td>
                       </tr>
                     ))
@@ -596,8 +633,8 @@ const AdminDashboard = () => {
                 </label>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button type="submit" className="adash-btn">
-                    Save User
+                  <button type="submit" className="adash-btn" disabled={isSavingUser}>
+                    {isSavingUser ? 'Saving...' : 'Save User'}
                   </button>
                   <button
                     type="button"
