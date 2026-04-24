@@ -19,9 +19,8 @@ const TicketDetails = ({ ticket, onUpdate, currentRole = 'USER' }) => {
   const [pendingStatus, setPendingStatus] = useState(null);
   const [notesText, setNotesText] = useState('');
 
-  const statuses = currentRole === 'ADMIN'
-    ? ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED']
-    : ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
+  const technicianStatuses = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
+  const adminStatuses = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'];
 
   const handleStatusChange = async (newStatus) => {
     if (newStatus === 'RESOLVED' || newStatus === 'CLOSED') {
@@ -106,11 +105,11 @@ const TicketDetails = ({ ticket, onUpdate, currentRole = 'USER' }) => {
       </div>
 
       <div className="details-content">
-        {currentRole === 'TECHNICIAN' && (
+        {(currentRole === 'TECHNICIAN' || currentRole === 'ADMIN') && (
           <div>
             <div className="section-label">Status</div>
             <div className="status-selector">
-              {statuses.map(s => (
+              {(currentRole === 'ADMIN' ? adminStatuses : technicianStatuses).map(s => (
                 <button
                   key={s}
                   className={`status-btn ${ticket.status === s ? 'active' : ''}`}

@@ -12,6 +12,7 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
   });
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = ['Hardware', 'Software', 'Network', 'Facility', 'Other'];
   const priorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -41,6 +42,7 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
     e.preventDefault();
     try {
       setLoading(true);
+      setError('');
       const data = new FormData();
 
       const ticketBlob = new Blob([JSON.stringify(formData)], {
@@ -55,8 +57,13 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
       await api.post('/tickets', data);
 
       onCreated();
-    } catch (error) {
-      console.error("Failed to create ticket", error);
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to submit ticket. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -112,6 +119,20 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
               {files.length > 0 ? `${files.length} file(s) selected` : 'No files selected'}
             </div>
           </div>
+
+          {error && (
+            <div style={{
+              padding: '10px 12px',
+              borderRadius: '10px',
+              background: 'rgba(254,226,226,0.85)',
+              border: '1px solid rgba(220,38,38,0.25)',
+              color: '#b91c1c',
+              fontSize: '13px',
+              marginTop: '4px'
+            }}>
+              {error}
+            </div>
+          )}
 
           <div className="modal-footer">
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
