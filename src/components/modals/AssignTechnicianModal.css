@@ -1,0 +1,21 @@
+.assign-modal {
+  max-width: 500px;
+}
+
+.ticket-summary {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  margin-bottom: 0.5rem;
+}
+
+.ticket-summary strong {
+  display: block;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.ticket-summary .text-secondary {
+  font-size: 0.85rem;
+}

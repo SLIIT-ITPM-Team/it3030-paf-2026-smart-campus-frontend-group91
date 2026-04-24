@@ -1,0 +1,398 @@
+/* ── Admin Dashboard — Crimson / Rose Authority Theme ───────────── */
+
+@keyframes adashFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes adashSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.adash-root {
+  min-height: calc(100svh - 82px);
+  padding: 28px 20px 40px;
+  color: #1a0a0f;
+  background:
+    radial-gradient(circle at 88% -8%,  rgba(225, 29, 72, 0.22) 0%, transparent 48%),
+    radial-gradient(circle at 6% 108%,  rgba(190, 18, 60, 0.14) 0%, transparent 44%),
+    radial-gradient(circle at 50% 50%,  rgba(253, 242, 248, 0.9) 0%, transparent 100%),
+    #ffffff;
+}
+
+.adash-wrap {
+  width: min(1160px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── Hero banner ─────────────────────────────── */
+.adash-hero {
+  border: 1px solid rgba(225, 29, 72, 0.2);
+  border-radius: 20px;
+  padding: 28px 30px;
+  background: linear-gradient(145deg, #fff1f2 0%, #ffffff 60%, #fff0f3 100%);
+  box-shadow:
+    0 4px 6px rgba(225, 29, 72, 0.06),
+    0 20px 40px rgba(225, 29, 72, 0.1);
+  animation: adashFade 0.45s ease both;
+  position: relative;
+  overflow: hidden;
+}
+
+.adash-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(225, 29, 72, 0.12), transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.adash-kicker {
+  margin: 0;
+  color: #e11d48;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.adash-hero h1 {
+  margin: 10px 0 10px;
+  line-height: 1.08;
+  font-size: clamp(28px, 4vw, 44px);
+  color: #1a0a0f;
+  font-weight: 800;
+}
+
+.adash-hero p {
+  margin: 0;
+  max-width: 75ch;
+  color: #4b1830;
+  line-height: 1.6;
+}
+
+.adash-meta-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.adash-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(225, 29, 72, 0.35);
+  background: rgba(225, 29, 72, 0.1);
+  color: #9f1239;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+}
+
+/* ── Stat grid ──────────────────────────────── */
+.adash-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.adash-stat {
+  border: 1px solid rgba(225, 29, 72, 0.15);
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.08);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.adash-stat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #e11d48, #f43f5e);
+  border-radius: 16px 16px 0 0;
+}
+
+.adash-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(225, 29, 72, 0.14);
+}
+
+.adash-stat h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e11d48;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.adash-stat strong {
+  margin-top: 8px;
+  display: block;
+  font-size: 32px;
+  font-weight: 800;
+  color: #1a0a0f;
+  line-height: 1.1;
+}
+
+/* ── Layout grid ────────────────────────────── */
+.adash-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.adash-card {
+  border: 1px solid rgba(225, 29, 72, 0.12);
+  border-radius: 16px;
+  padding: 22px;
+  background: #ffffff;
+  box-shadow: 0 6px 24px rgba(225, 29, 72, 0.07);
+  animation: adashSlide 0.5s ease both;
+}
+
+.adash-card h2 {
+  margin: 0 0 8px;
+  color: #1a0a0f;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.adash-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.adash-sub {
+  margin: 0;
+  color: #6b3040;
+  font-size: 14px;
+}
+
+/* ── Form controls ──────────────────────────── */
+.adash-input,
+.adash-select {
+  width: 100%;
+  border: 1.5px solid rgba(225, 29, 72, 0.2);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1a0a0f;
+  font: inherit;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.adash-input:focus,
+.adash-select:focus {
+  outline: none;
+  border-color: #e11d48;
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.12);
+}
+
+/* ── Buttons ────────────────────────────────── */
+.adash-btn {
+  border: 1.5px solid #e11d48;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  color: #ffffff;
+  padding: 10px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+}
+
+.adash-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #be123c, #9f1239);
+  border-color: #9f1239;
+  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.35);
+  transform: translateY(-1px);
+}
+
+.adash-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.adash-btn-outline {
+  background: #ffffff;
+  color: #9f1239;
+  border-color: rgba(225, 29, 72, 0.4);
+  box-shadow: none;
+}
+
+.adash-btn-outline:hover:not(:disabled) {
+  background: #fff1f2;
+  border-color: #e11d48;
+  color: #e11d48;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.1);
+  transform: translateY(-1px);
+}
+
+.adash-btn-danger {
+  background: linear-gradient(135deg, #1a0a0f, #450a20);
+  border-color: #1a0a0f;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.adash-btn-danger:hover:not(:disabled) {
+  background: #000000;
+  border-color: #000000;
+}
+
+.adash-btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+/* ── Messages ───────────────────────────────── */
+.adash-message {
+  margin-top: 12px;
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 241, 242, 0.9);
+  color: #9f1239;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.adash-message-error {
+  border-color: rgba(220, 38, 38, 0.4);
+  background: rgba(254, 226, 226, 0.85);
+  color: #b91c1c;
+}
+
+/* ── Table ──────────────────────────────────── */
+.adash-table-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(225, 29, 72, 0.1);
+}
+
+.adash-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+}
+
+.adash-table th {
+  text-align: left;
+  background: linear-gradient(90deg, #fff1f2, #ffe4e6);
+  color: #9f1239;
+  border-bottom: 2px solid rgba(225, 29, 72, 0.2);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 14px 16px;
+}
+
+.adash-table td {
+  text-align: left;
+  border-bottom: 1px solid rgba(225, 29, 72, 0.07);
+  color: #1a0a0f;
+  font-size: 14px;
+  padding: 14px 16px;
+}
+
+.adash-table tr:hover td {
+  background: rgba(255, 241, 242, 0.5);
+}
+
+.adash-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Role badge ─────────────────────────────── */
+.adash-role {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+}
+
+/* per-role colours */
+.adash-role:has([data-role="ADMIN"]),
+[data-role-admin] { background: #fef2f2; color: #b91c1c; border-color: #fca5a5; }
+[data-role-tech]  { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+[data-role-user]  { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+
+/* fallback - keep existing usage */
+.adash-role {
+  background: rgba(225, 29, 72, 0.1);
+  color: #9f1239;
+  border-color: rgba(225, 29, 72, 0.3);
+}
+
+.adash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.adash-select-inline {
+  min-width: 140px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+.adash-btn-delete {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #b91c1c;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.adash-btn-delete:hover:not(:disabled) {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
+  transform: translateY(-1px);
+}
+
+.adash-empty {
+  text-align: center;
+  color: #6b3040;
+  padding: 24px 12px;
+  font-size: 14px;
+}
+
+/* ── Responsive ─────────────────────────────── */
+@media (max-width: 980px) {
+  .adash-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .adash-summary { grid-template-columns: 1fr; }
+  .adash-hero { padding: 20px; }
+}

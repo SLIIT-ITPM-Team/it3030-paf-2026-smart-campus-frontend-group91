@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { clearAuthSession, getStoredToken } from '../auth/authStorage';
+import { clearAuthSession, getStoredToken, getStoredUser } from '../auth/authStorage';
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
@@ -12,6 +12,18 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  const user = getStoredUser();
+  if (user) {
+    config.headers = config.headers || {};
+    if (user.id || user.userId) {
+      config.headers['X-User-Id'] = String(user.id ?? user.userId);
+    }
+    const role = Array.isArray(user.roles) ? user.roles[0] : user.role;
+    if (role) {
+      config.headers['X-User-Role'] = String(role).replace(/^ROLE_/, '').toUpperCase();
+    }
   }
 
   return config;

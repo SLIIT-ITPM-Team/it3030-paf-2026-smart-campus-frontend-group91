@@ -5,10 +5,12 @@ const NAV_ITEMS = [
   { to: '/user', label: 'User Space', roles: ['USER'] },
   { to: '/user/bookings', label: 'My Bookings', roles: ['USER'] },
   { to: '/user/bookings/new', label: 'Book Resource', roles: ['USER'] },
+  { to: '/user/tickets', label: 'My Tickets', roles: ['USER'] },
   { to: '/admin', label: 'Admin Dashboard', roles: ['ADMIN'] },
-  { to: '/technician', label: 'Technician Dashboard', roles: ['TECHNICIAN'] },
   { to: '/admin/bookings', label: 'Manage Bookings', roles: ['ADMIN'] },
-  { to: '/technician', label: 'Technician Space', roles: ['TECHNICIAN'] },
+  { to: '/admin/tickets', label: 'Manage Tickets', roles: ['ADMIN'] },
+  { to: '/technician', label: 'Technician Dashboard', roles: ['TECHNICIAN'] },
+  { to: '/technician/tickets', label: 'My Assignments', roles: ['TECHNICIAN'] },
 ];
 
 const AppLayout = () => {
