@@ -3,6 +3,7 @@ import App from '../App';
 import { useAuth } from '../auth/AuthContext';
 import AppLayout from '../layout/AppLayout';
 import AdminDashboard from '../pages/AdminDashboard';
+import AdminAnalyticsDashboard from '../pages/AdminAnalyticsDashboard';
 import AdminBookingManagementPage from '../pages/booking_services/AdminBookings';
 import UserBookingManagementPage from '../pages/booking_services/StudentBooking';
 import BookingDetails from '../pages/booking_services/BookingDetails';
@@ -99,6 +100,10 @@ const AppRouter = () => {
             <Route
               path="/admin"
               element={<AdminDashboard />}
+            />
+            <Route
+              path="/admin/analytics"
+              element={<AdminAnalyticsDashboard />}
             />
           </Route>
 
