@@ -32,13 +32,6 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  if (user) {
-    config.headers = config.headers || {};
-    setHeaderIfMissing(config.headers, 'X-User-Id', user.id);
-    setHeaderIfMissing(config.headers, 'X-User-Name', user.username || user.name || user.fullName || user.email);
-    setHeaderIfMissing(config.headers, 'X-User-Email', user.email);
-  }
-
   return config;
 });
 
