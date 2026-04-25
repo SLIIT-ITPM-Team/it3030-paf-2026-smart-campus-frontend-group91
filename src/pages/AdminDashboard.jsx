@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import api from '../api/api';
 import './AdminDashboard.css';
@@ -30,6 +31,7 @@ const mapUserFromApi = (item) => {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
@@ -201,6 +203,13 @@ const AdminDashboard = () => {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button type="button" className="adash-btn adash-btn-outline" onClick={loadUsers}>
                   Refresh
+                </button>
+                <button
+                  type="button"
+                  className="adash-btn adash-btn-outline"
+                  onClick={() => navigate('/admin/resources')}
+                >
+                  Resource Management
                 </button>
               </div>
             </div>
