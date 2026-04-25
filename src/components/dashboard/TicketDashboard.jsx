@@ -85,10 +85,13 @@ const TicketDashboard = ({ currentRole }) => {
             {FILTERS.map(f => (
               <button
                 key={f}
+                data-status={f}
                 className={`filter-btn ${activeFilter === f ? 'active' : ''}`}
                 onClick={() => { setActiveFilter(f); }}
               >
-                {f === 'IN_PROGRESS' ? 'In Progress' : f.charAt(0) + f.slice(1).toLowerCase()}
+                <span className="filter-label">
+                  {f === 'ALL' ? 'All' : f === 'IN_PROGRESS' ? 'In Progress' : f.charAt(0) + f.slice(1).toLowerCase()}
+                </span>
                 <span className="filter-count">
                   {f === 'ALL' ? tickets.length : tickets.filter(t => t.status === f).length}
                 </span>
