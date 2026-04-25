@@ -162,7 +162,7 @@ const AdminDashboard = () => {
 
       <div className="adash-wrap">
         <header className="adash-hero">
-          <p className="adash-kicker">Admin Dashboard</p>
+          <p className="adash-kicker">Smart Campus Hub — Admin Control</p>
           <h1>Campus User Management</h1>
           <p>
             Manage user accounts from a single control panel with quick role updates and safe account
@@ -170,7 +170,8 @@ const AdminDashboard = () => {
           </p>
           <div className="adash-meta-row">
             <span className="adash-pill">Signed in as: {adminName}</span>
-            <span className="adash-pill">Admin access enabled</span>
+            <span className="adash-pill">Total Users: {users.length}</span>
+            <span className="adash-pill">Admin Access Enabled</span>
           </div>
         </header>
 
