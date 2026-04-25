@@ -6,24 +6,30 @@ export const API_BASE_URL =
 
 const api = axios.create({ baseURL: API_BASE_URL });
 
+const setHeaderIfMissing = (headers, key, value) => {
+  if (value === undefined || value === null || value === '') {
+    return;
+  }
+
+  if (typeof headers?.set === 'function') {
+    if (!headers.get?.(key)) {
+      headers.set(key, String(value));
+    }
+    return;
+  }
+
+  if (headers && headers[key] == null) {
+    headers[key] = String(value);
+  }
+};
+
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
+  const user = getStoredUser();
 
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
-  }
-
-  const user = getStoredUser();
-  if (user) {
-    config.headers = config.headers || {};
-    if (user.id || user.userId) {
-      config.headers['X-User-Id'] = String(user.id ?? user.userId);
-    }
-    const role = Array.isArray(user.roles) ? user.roles[0] : user.role;
-    if (role) {
-      config.headers['X-User-Role'] = String(role).replace(/^ROLE_/, '').toUpperCase();
-    }
   }
 
   return config;

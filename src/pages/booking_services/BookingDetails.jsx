@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '../../auth/AuthContext';
 import bookingService from '../../services/bookingService';
 import { bookingBadgeClass, normalizeTime } from './bookingUiUtils';
@@ -34,14 +35,55 @@ const BookingDetails = () => {
     loadBooking();
   }, [bookingId]);
 
-  const qrUrl = useMemo(() => {
-    if (!booking?.qrCodeValue) return '';
-    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(booking.qrCodeValue)}`;
-  }, [booking?.qrCodeValue]);
+  const qrRef = useRef(null);
+
+  const downloadQR = () => {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pngUrl;
+    downloadLink.download = `booking-${booking.bookingId}-qr.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  const canReject = isAdmin && booking?.status === 'PENDING';
+  const canCancel = booking
+    ? (isAdmin ? booking.status === 'APPROVED' : ['PENDING', 'APPROVED'].includes(booking.status))
+    : false;
+
+  const onReject = async () => {
+    if (!booking || !canReject) return;
+
+    const reason = window.prompt('Rejection reason:', 'Rejected by admin.');
+    if (reason === null) return;
+
+    const trimmedReason = String(reason).trim();
+    if (!trimmedReason) {
+      setError('Rejection reason is required.');
+      setMessage('');
+      return;
+    }
+
+    try {
+      const updated = await bookingService.updateBookingStatus(booking.bookingId, 'REJECTED', {
+        reason: trimmedReason,
+        userRole: 'ADMIN',
+      });
+      setBooking(updated);
+      setError('');
+      setMessage('Booking rejected. Notification email has been triggered.');
+    } catch (rejectError) {
+      setMessage('');
+      setError(rejectError?.response?.data?.message || 'Unable to reject this booking.');
+    }
+  };
 
   const onCancel = async () => {
     if (!booking) return;
-    if (!['PENDING', 'APPROVED'].includes(booking.status)) return;
+    if (!canCancel) return;
 
     const reason = window.prompt(
       'Cancellation reason (optional):',
@@ -51,8 +93,10 @@ const BookingDetails = () => {
     try {
       const updated = await bookingService.cancelBooking(booking.bookingId, reason || undefined);
       setBooking(updated);
+      setError('');
       setMessage('Booking cancelled. Confirmation email has been triggered.');
     } catch (cancelError) {
+      setMessage('');
       setError(cancelError?.response?.data?.message || 'Unable to cancel this booking.');
     }
   };
@@ -60,9 +104,31 @@ const BookingDetails = () => {
   return (
     <section className="booking-page">
       <div className="booking-container">
-        <div className="booking-card">
-          <h1 className="booking-title">Booking Details</h1>
-          <p className="booking-sub">Review full booking details and QR check-in information.</p>
+        <div className="booking-hero">
+          <div className="booking-hero-kicker">Booking Information</div>
+          <div className="booking-hero-row">
+            <div>
+              <h1 className="booking-title">Booking Details</h1>
+              <p className="booking-sub">Review full booking details and QR check-in information.</p>
+            </div>
+            {booking && (
+              <div className="booking-hero-badge">
+                <span className="booking-pill" style={{ 
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  padding: '6px 14px',
+                  fontWeight: '600',
+                  letterSpacing: '0.02em'
+                }}>
+                  ID: #{booking.bookingId}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? <div className="booking-alert booking-alert-info">Loading booking details...</div> : null}
@@ -89,10 +155,19 @@ const BookingDetails = () => {
               <p><strong>Updated At:</strong> {booking.updatedAt ? new Date(booking.updatedAt).toLocaleString() : 'N/A'}</p>
 
               <div className="booking-actions" style={{ marginTop: 8 }}>
+                {canReject ? (
+                  <button
+                    type="button"
+                    className="booking-btn booking-btn-danger"
+                    onClick={onReject}
+                  >
+                    Reject Booking
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="booking-btn booking-btn-danger"
-                  disabled={!['PENDING', 'APPROVED'].includes(booking.status)}
+                  disabled={!canCancel}
                   onClick={onCancel}
                 >
                   Cancel Booking
@@ -109,16 +184,24 @@ const BookingDetails = () => {
 
             <div className="booking-col-4">
               <h3 style={{ marginTop: 0 }}>QR Check-In</h3>
-              {booking.status === 'APPROVED' && qrUrl ? (
+              {booking.status === 'APPROVED' ? (
                 <>
-                  <img className="booking-qr" src={qrUrl} alt="Booking QR code" />
-                  <p className="booking-sub" style={{ marginTop: 8 }}>
+                  <div ref={qrRef} style={{ display: 'inline-block', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                    <QRCodeCanvas 
+                      value={`Booking ID: #${booking.bookingId}\nUser: ${booking.userName || 'N/A'}\nHall: ${booking.resourceName || 'N/A'}\nTime: ${booking.date} from ${normalizeTime(booking.startTime)} to ${normalizeTime(booking.endTime)}`} 
+                      size={500} 
+                      level="H" 
+                      includeMargin={true}
+                      style={{ width: 200, height: 200, display: 'block' }}
+                    />
+                  </div>
+                  <p className="booking-sub" style={{ marginTop: 12 }}>
                     This QR is valid only for the approved date/time slot.
                   </p>
                   <div className="booking-actions">
-                    <a className="booking-btn" href={qrUrl} download={`booking-${booking.bookingId}-qr.png`}>
+                    <button type="button" className="booking-btn" onClick={downloadQR}>
                       Download QR
-                    </a>
+                    </button>
                   </div>
                 </>
               ) : (
