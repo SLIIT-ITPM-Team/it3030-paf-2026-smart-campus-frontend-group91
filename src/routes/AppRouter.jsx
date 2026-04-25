@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import AppLayout from '../layout/AppLayout';
 import AdminDashboard from '../pages/AdminDashboard';
 import AdminAnalyticsDashboard from '../pages/AdminAnalyticsDashboard';
+import ResourceManagementPage from '../pages/ResourceManagementPage';
 import AdminBookingManagementPage from '../pages/booking_services/AdminBookings';
 import UserBookingManagementPage from '../pages/booking_services/StudentBooking';
 import BookingDetails from '../pages/booking_services/BookingDetails';
@@ -11,6 +12,7 @@ import BookingFormPage from '../pages/booking_services/BookingFormPage';
 import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import OAuthCallbackPage from '../pages/OAuthCallbackPage';
+import ResourceCatalogPage from '../pages/ResourceCatalogPage';
 import RegisterPage from '../pages/RegisterPage';
 import TechnicianDashboard from '../pages/TechnicianDashboard';
 import UserDashboard from '../pages/UserDashboard';
@@ -61,6 +63,10 @@ const AppRouter = () => {
               path="/user"
               element={<UserDashboard />}
             />
+             <Route
+               path="/user/resources"
+               element={<ResourceCatalogPage />}
+             />
           </Route>
 
           <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
@@ -100,6 +106,10 @@ const AppRouter = () => {
             <Route
               path="/admin"
               element={<AdminDashboard />}
+            />
+            <Route
+              path="/admin/resources"
+              element={<ResourceManagementPage />}
             />
             <Route
               path="/admin/analytics"
