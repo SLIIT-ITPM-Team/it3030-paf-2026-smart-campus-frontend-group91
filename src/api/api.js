@@ -27,9 +27,18 @@ api.interceptors.request.use((config) => {
   const token = getStoredToken();
   const user = getStoredUser();
 
+  config.headers = config.headers || {};
+
   if (token) {
-    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (user) {
+    setHeaderIfMissing(config.headers, 'X-User-Id', user.id);
+    const role = Array.isArray(user.roles) && user.roles.length > 0
+      ? String(user.roles[0]).replace(/^ROLE_/, '').toUpperCase()
+      : user.role;
+    setHeaderIfMissing(config.headers, 'X-User-Role', role);
   }
 
   return config;
