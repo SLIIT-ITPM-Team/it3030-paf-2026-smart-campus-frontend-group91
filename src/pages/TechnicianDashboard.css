@@ -1,0 +1,239 @@
+/* ── Technician Dashboard — Amber / Teal Operations Theme ──────── */
+/* Overrides udash-* base (UserDashboard.css) for udash-root-tech context */
+
+/* ── Root override ──────────────────────────── */
+.udash-root.udash-root-tech {
+  background:
+    radial-gradient(circle at 8% 12%,  rgba(245, 158, 11, 0.22) 0%, transparent 38%),
+    radial-gradient(circle at 92% 88%, rgba(13, 148, 136, 0.18) 0%, transparent 42%),
+    radial-gradient(circle at 50% 50%, rgba(255, 251, 235, 0.7) 0%, transparent 100%),
+    #ffffff;
+}
+
+/* ── Hero override ──────────────────────────── */
+.udash-hero.udash-hero-tech {
+  border-color: rgba(245, 158, 11, 0.25);
+  background: linear-gradient(145deg, #fffbeb 0%, #ffffff 50%, #f0fdfa 100%);
+  box-shadow:
+    0 4px 6px rgba(245, 158, 11, 0.07),
+    0 20px 40px rgba(13, 148, 136, 0.1);
+}
+
+.udash-hero.udash-hero-tech::before {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.16), transparent 70%);
+}
+
+.udash-root-tech .udash-kicker { color: #d97706; }
+
+.udash-root-tech .udash-hero h1 { color: #1c0f00; }
+.udash-root-tech .udash-hero p  { color: #3d2900; }
+
+.udash-root-tech .udash-pill {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
+
+/* ── Stat cards override ────────────────────── */
+.udash-summary.udash-summary-tech {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.udash-root-tech .udash-stat {
+  border-color: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.09);
+}
+
+.udash-root-tech .udash-stat::before {
+  background: linear-gradient(90deg, #f59e0b, #0d9488);
+}
+
+.udash-root-tech .udash-stat:hover {
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.16);
+}
+
+.udash-root-tech .udash-stat h3 {
+  color: #d97706;
+}
+
+.udash-root-tech .udash-stat strong {
+  color: #1c0f00;
+}
+
+/* ── Technician quick-action buttons ────────── */
+.udash-tech-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.udash-tech-action {
+  border: 1.5px solid rgba(13, 148, 136, 0.35);
+  background: linear-gradient(135deg, #ffffff, #f0fdfa);
+  color: #0f766e;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.udash-tech-action::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0d9488, #14b8a6);
+  border-radius: 14px 14px 0 0;
+}
+
+.udash-tech-action:hover {
+  border-color: rgba(13, 148, 136, 0.6);
+  background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ── Nav tabs override ──────────────────────── */
+.udash-root-tech .udash-tab {
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #92400e;
+}
+
+.udash-root-tech .udash-tab:hover {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.07);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.14);
+}
+
+.udash-root-tech .udash-tab-active {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(13, 148, 136, 0.08));
+  color: #92400e;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+/* ── Cards override ─────────────────────────── */
+.udash-root-tech .udash-card {
+  border-color: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.07);
+}
+
+/* ── Form controls override ─────────────────── */
+.udash-root-tech .udash-input,
+.udash-root-tech .udash-select,
+.udash-root-tech .udash-textarea {
+  border-color: rgba(13, 148, 136, 0.25);
+}
+
+.udash-root-tech .udash-input:focus,
+.udash-root-tech .udash-select:focus,
+.udash-root-tech .udash-textarea:focus {
+  border-color: #0d9488;
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+}
+
+/* ── Buttons override ───────────────────────── */
+.udash-root-tech .udash-btn {
+  border-color: #0d9488;
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.28);
+}
+
+.udash-root-tech .udash-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0f766e, #115e59);
+  border-color: #0f766e;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.35);
+}
+
+.udash-root-tech .udash-btn-outline {
+  background: #ffffff;
+  color: #0f766e;
+  border-color: rgba(13, 148, 136, 0.4);
+  box-shadow: none;
+}
+
+.udash-root-tech .udash-btn-outline:hover:not(:disabled) {
+  background: rgba(13, 148, 136, 0.07);
+  border-color: #0d9488;
+}
+
+.udash-root-tech .udash-btn-danger {
+  border-color: #1c0f00;
+  background: linear-gradient(135deg, #78350f, #451a03);
+}
+
+.udash-root-tech .udash-btn-danger:hover:not(:disabled) {
+  background: #1c0f00;
+  border-color: #1c0f00;
+}
+
+/* ── Messages override ──────────────────────── */
+.udash-root-tech .udash-message {
+  border-color: rgba(13, 148, 136, 0.3);
+  color: #0f766e;
+  background: rgba(240, 253, 250, 0.9);
+}
+
+.udash-root-tech .udash-error {
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #92400e;
+  background: rgba(255, 251, 235, 0.85);
+}
+
+/* ── List items override ────────────────────── */
+.udash-root-tech .udash-item {
+  border-color: rgba(13, 148, 136, 0.14);
+  background: #fafffe;
+}
+
+.udash-root-tech .udash-item:hover {
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.12);
+}
+
+.udash-root-tech .udash-item-meta { color: #065f46; }
+
+/* ── Badge overrides ────────────────────────── */
+.udash-root-tech .udash-badge.open,
+.udash-root-tech .udash-badge.active {
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+.udash-root-tech .udash-badge.in-progress {
+  color: #0f766e;
+  background: rgba(13, 148, 136, 0.12);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+.udash-root-tech .udash-attachment {
+  border-color: rgba(13, 148, 136, 0.28);
+  background: rgba(13, 148, 136, 0.08);
+  color: #0f766e;
+}
+
+.udash-root-tech .udash-comments {
+  border-top-color: rgba(13, 148, 136, 0.12);
+}
+
+.udash-root-tech .udash-comment {
+  border-color: rgba(13, 148, 136, 0.14);
+}
+
+/* ── Responsive ─────────────────────────────── */
+@media (max-width: 1024px) {
+  .udash-summary.udash-summary-tech { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .udash-tech-actions                { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .udash-summary.udash-summary-tech { grid-template-columns: 1fr; }
+  .udash-tech-actions                { grid-template-columns: 1fr; }
+}

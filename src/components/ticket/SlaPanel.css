@@ -1,0 +1,70 @@
+.sla-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sla-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 0.1rem;
+}
+
+.sla-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.sla-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.sla-countdown {
+  font-weight: 700;
+  color: #f59e0b;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+}
+
+.sla-violated {
+  font-weight: 700;
+  color: #ef4444;
+  font-size: 0.82rem;
+}
+
+.sla-result {
+  font-weight: 700;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sla-result.met     { color: #16a34a; }
+.sla-result.violated { color: #ef4444; }
+
+.sla-limit {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.sla-info {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.sla-info strong { color: #475569; }

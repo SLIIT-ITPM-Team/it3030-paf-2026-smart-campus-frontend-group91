@@ -36,6 +36,11 @@ const BookingFormPage = () => {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  const todayString = useMemo(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  }, []);
+
   useEffect(() => {
     const loadResources = async () => {
       try {
@@ -116,6 +121,8 @@ const BookingFormPage = () => {
     };
   }, [form.resourceId, form.bookingDate, form.startTime, form.endTime]);
 
+  
+//validation add 
   const validate = () => {
     const nextErrors = {};
 
@@ -133,6 +140,18 @@ const BookingFormPage = () => {
       nextErrors.expectedAttendees = `Attendees exceed capacity (${selectedResource.capacity}).`;
     }
 
+    if (form.startTime) {
+      if (form.startTime < '07:00' || form.startTime > '20:00') {
+        nextErrors.startTime = 'Start time must be between 07:00 AM and 08:00 PM.';
+      }
+    }
+
+    if (form.endTime) {
+      if (form.endTime < '07:00' || form.endTime > '20:00') {
+        nextErrors.endTime = 'End time must be between 07:00 AM and 08:00 PM.';
+      }
+    }
+
     if (form.startTime && form.endTime && !compareTime(form.startTime, form.endTime)) {
       nextErrors.endTime = 'End time must be after start time.';
     }
@@ -148,6 +167,11 @@ const BookingFormPage = () => {
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
+
+
+
+
+
 
   const onFieldChange = (event) => {
     const { name, value } = event.target;
@@ -205,12 +229,23 @@ const BookingFormPage = () => {
         type: 'success',
         text: `Booking submitted with status ${booking.status}. A confirmation email has been triggered.`,
       });
-      setTimeout(() => navigate('/user/bookings'), 700);
+      setTimeout(() => {
+        navigate('/user/bookings', {
+          state: {
+            createdBooking: booking,
+          },
+        });
+      }, 700);
     } catch (error) {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        (typeof error?.response?.data === 'string' ? error.response.data : '');
+
       setAlert({
         type: 'error',
         text:
-          error?.response?.data?.message ||
+          backendMessage ||
           'Booking could not be submitted because the slot is unavailable or invalid.',
       });
     } finally {
@@ -221,11 +256,25 @@ const BookingFormPage = () => {
   return (
     <section className="booking-page">
       <div className="booking-container">
-        <div className="booking-card">
-          <h1 className="booking-title">Create Booking Request</h1>
-          <p className="booking-sub">
-            Select a resource, set date and time, and submit a booking that starts in <strong>PENDING</strong> state.
-          </p>
+        <div className="booking-card booking-hero booking-hero-row">
+          <div>
+            <div className="booking-hero-kicker">Book Resource</div>
+            <h1 className="booking-title">Create Booking Request</h1>
+            <p className="booking-sub">
+              Select a resource, set date and time, and submit a booking that starts in <strong>PENDING</strong> state.
+            </p>
+          </div>
+          <div className="booking-pill booking-hero-badge" style={{ 
+            background: 'rgba(255, 255, 255, 0.15)',
+            color: '#ffffff',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            padding: '6px 14px',
+            fontWeight: '600',
+            letterSpacing: '0.02em'
+          }}>Live validation enabled</div>
         </div>
 
         {alert.text ? (
@@ -263,6 +312,7 @@ const BookingFormPage = () => {
               className="booking-input"
               value={form.bookingDate}
               onChange={onFieldChange}
+              min={todayString}
             />
             {errors.bookingDate ? <small className="field-error">{errors.bookingDate}</small> : null}
           </div>
@@ -287,6 +337,8 @@ const BookingFormPage = () => {
               id="startTime"
               name="startTime"
               type="time"
+              min="07:00"
+              max="20:00"
               className="booking-input"
               value={form.startTime}
               onChange={onFieldChange}
@@ -300,6 +352,8 @@ const BookingFormPage = () => {
               id="endTime"
               name="endTime"
               type="time"
+              min="07:00"
+              max="20:00"
               className="booking-input"
               value={form.endTime}
               onChange={onFieldChange}
@@ -320,7 +374,7 @@ const BookingFormPage = () => {
             {errors.purpose ? <small className="field-error">{errors.purpose}</small> : null}
           </div>
 
-          <div className="booking-col-6">
+          <div className="booking-col-12">
             <label className="booking-label">Real-Time Availability</label>
             {!availability.checked && !availability.checking ? (
               <div className="booking-alert booking-alert-info">
@@ -339,7 +393,7 @@ const BookingFormPage = () => {
             ) : null}
 
             {!availability.available && availability.suggestions.length > 0 ? (
-              <div style={{ marginTop: 8 }}>
+              <div className="booking-slot-suggestions">
                 <strong>Next 3 available slots on the same day:</strong>
                 <ul>
                   {availability.suggestions.slice(0, 3).map((slot, index) => (
@@ -347,8 +401,7 @@ const BookingFormPage = () => {
                       {normalizeTime(slot.startTime)} - {normalizeTime(slot.endTime)}
                       <button
                         type="button"
-                        className="booking-btn booking-btn-muted"
-                        style={{ marginLeft: 8 }}
+                        className="booking-btn booking-btn-muted booking-slot-use-btn"
                         onClick={() =>
                           setForm((prev) => ({
                             ...prev,
@@ -366,7 +419,7 @@ const BookingFormPage = () => {
             ) : null}
 
             {availability.checked && !availability.available ? (
-              <div className="booking-actions" style={{ marginTop: 10 }}>
+              <div className="booking-actions booking-actions-top-gap">
                 <button type="button" className="booking-btn booking-btn-danger" onClick={onJoinWaitlist}>
                   Join Waitlist
                 </button>
@@ -375,9 +428,9 @@ const BookingFormPage = () => {
           </div>
 
           {selectedResource ? (
-            <div className="booking-col-12 booking-card" style={{ margin: 0 }}>
+            <div className="booking-col-12 booking-card booking-selected-resource-card">
               <strong>Selected Resource Details</strong>
-              <p className="booking-sub" style={{ marginTop: 8 }}>
+              <p className="booking-sub booking-selected-resource-detail">
                 {selectedResource.resourceName} | {selectedResource.resourceType} | {selectedResource.location} | Capacity: {selectedResource.capacity}
               </p>
               <p className="booking-sub">
