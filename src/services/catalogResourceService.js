@@ -21,6 +21,7 @@ const mapResource = (item = {}) => ({
   type: item.type || 'LECTURE_HALL',
   capacity: item.capacity ?? 0,
   status: item.status || 'ACTIVE',
+  imageUrl: item.imageUrl || '',
   location: mapLocation(item.location),
   availabilityWindows: Array.isArray(item.availabilityWindows)
     ? item.availabilityWindows.map(mapWindow)
@@ -60,6 +61,15 @@ const catalogResourceService = {
   updateStatus: async (resourceId, status) => {
     const response = await api.patch(`/catalog/resources/${resourceId}/status`, null, {
       params: { status },
+    });
+    return mapResource(response.data);
+  },
+
+  uploadImage: async (resourceId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post(`/catalog/resources/${resourceId}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return mapResource(response.data);
   },

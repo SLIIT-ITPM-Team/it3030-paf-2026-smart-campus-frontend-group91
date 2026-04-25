@@ -1,183 +1,157 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import catalogResourceService from '../services/catalogResourceService';
 import './ResourceCatalogPage.css';
 
-const RESOURCE_TYPES = ['ALL', 'LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'EQUIPMENT'];
-const RESOURCE_STATUSES = ['ALL', 'ACTIVE', 'OUT_OF_SERVICE', 'UNDER_MAINTENANCE'];
-
 const normalizeFilters = (filters) => ({
   keyword: filters.keyword.trim() || undefined,
-  type: filters.type !== 'ALL' ? filters.type : undefined,
-  status: filters.status !== 'ALL' ? filters.status : undefined,
-  minCapacity: filters.minCapacity ? Number(filters.minCapacity) : undefined,
-  location: filters.location.trim() || undefined,
 });
 
 const formatLocation = (location) => {
-  if (!location) {
-    return 'Location not set';
-  }
+  if (!location) return 'Location not set';
   const parts = [location.buildingName, location.floorNumber, location.roomNumber].filter(Boolean);
   return parts.join(' / ') || location.description || 'Location not set';
 };
 
-const formatWindow = (windowItem) => {
-  if (!windowItem) {
-    return 'Schedule not set';
-  }
-  const start = String(windowItem.startTime || '').slice(0, 5);
-  const end = String(windowItem.endTime || '').slice(0, 5);
-  return `${windowItem.dayOfWeek || 'DAY'} ${start || '--:--'} - ${end || '--:--'}`;
+const formatHours = (windows = []) => {
+  if (!windows.length) return 'Not set';
+  if (windows.length > 1) return 'Multiple';
+  const w = windows[0];
+  const start = String(w.startTime || '').slice(0, 5);
+  const end = String(w.endTime || '').slice(0, 5);
+  return `${start || '--:--'} – ${end || '--:--'}`;
 };
+
+const fallbackImage =
+  'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=900&q=80';
+
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL
+  ? import.meta.env.VITE_API_BASE_URL.replace('/api', '')
+  : 'http://localhost:8081';
+
+const getResourceImageUrl = (resource) =>
+  resource.id ? `${BACKEND_URL}/api/catalog/resources/${resource.id}/image` : fallbackImage;
 
 const ResourceCatalogPage = () => {
   const [resources, setResources] = useState([]);
-  const [filters, setFilters] = useState({
-    keyword: '',
-    type: 'ALL',
-    status: 'ALL',
-    location: '',
-    minCapacity: '',
-  });
+  const [filters, setFilters] = useState({ keyword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   const loadResources = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage('');
-
     try {
       const data = await catalogResourceService.getResources(normalizeFilters(filters));
       setResources(data);
     } catch (error) {
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message ||
-        'Unable to load resource catalogue.';
-      setErrorMessage(message);
+      setErrorMessage(
+        error?.response?.data?.message || error?.message || 'Unable to load resource catalogue.',
+      );
       setResources([]);
     } finally {
       setIsLoading(false);
     }
   }, [filters]);
 
-  useEffect(() => {
-    loadResources();
-  }, [loadResources]);
-
-  const onFilterChange = (key) => (event) => {
-    setFilters((prev) => ({ ...prev, [key]: event.target.value }));
-  };
+  useEffect(() => { loadResources(); }, [loadResources]);
 
   return (
-    <section className="rcatalog-root">
-      <div className="rcatalog-wrap">
-        <header className="rcatalog-hero">
-          <p className="rcatalog-kicker">Resource Catalogue</p>
-          <h1>Find Campus Facilities & Assets</h1>
-          <p>
-            Browse availability, capacity, and location details for campus resources before submitting
-            booking requests.
-          </p>
-        </header>
+    <section className="rcat-root">
+      <div className="rcat-wrap">
 
-        <section className="rcatalog-card">
-          <div className="rcatalog-row">
-            <div>
-              <h2>Search & Filter</h2>
-              <p className="rcatalog-sub">Use filters to narrow down by type, location, or status.</p>
-            </div>
-            <button type="button" className="rcatalog-btn rcatalog-btn-outline" onClick={loadResources}>
-              Refresh
+        {/* Header */}
+        <div className="rcat-header">
+          <div className="rcat-header-text">
+            <span className="rcat-kicker">Resource Catalogue</span>
+            <h1>Discover Campus Facilities</h1>
+            <p>Search and book the perfect space or asset in seconds.</p>
+          </div>
+          <div className="rcat-search-bar">
+            <span className="rcat-search-icon">🔍</span>
+            <input
+              type="text"
+              className="rcat-search-input"
+              placeholder="Search by resource name…"
+              value={filters.keyword}
+              onChange={(e) => setFilters({ keyword: e.target.value })}
+            />
+            <button type="button" className="rcat-search-btn" onClick={loadResources}>
+              Search
             </button>
           </div>
+        </div>
 
-          <div className="rcatalog-filters">
-            <input
-              type="text"
-              className="rcatalog-input"
-              placeholder="Search by name or status"
-              value={filters.keyword}
-              onChange={onFilterChange('keyword')}
-            />
-            <select className="rcatalog-select" value={filters.type} onChange={onFilterChange('type')}>
-              {RESOURCE_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-            <select className="rcatalog-select" value={filters.status} onChange={onFilterChange('status')}>
-              {RESOURCE_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              className="rcatalog-input"
-              placeholder="Filter by location"
-              value={filters.location}
-              onChange={onFilterChange('location')}
-            />
-            <input
-              type="number"
-              min="0"
-              className="rcatalog-input"
-              placeholder="Min capacity"
-              value={filters.minCapacity}
-              onChange={onFilterChange('minCapacity')}
-            />
+        {errorMessage && (
+          <div className="rcat-error">{errorMessage}</div>
+        )}
+
+        {/* Feed */}
+        {isLoading ? (
+          <div className="rcat-state">
+            <div className="rcat-spinner" />
+            <p>Loading resources…</p>
           </div>
+        ) : resources.length === 0 ? (
+          <div className="rcat-state">
+            <span className="rcat-empty-icon">📭</span>
+            <p>No resources match your search.</p>
+          </div>
+        ) : (
+          <div className="rcat-feed">
+            {resources.map((resource) => (
+              <article className="rcat-card" key={String(resource.id)}>
 
-          {errorMessage ? <div className="rcatalog-message rcatalog-message-error">{errorMessage}</div> : null}
+                {/* Image — full width top */}
+                <div className="rcat-card-img">
+                  <img
+                    src={getResourceImageUrl(resource)}
+                    alt={resource.name}
+                    onError={(e) => { e.currentTarget.src = fallbackImage; }}
+                  />
+                </div>
 
-          {isLoading ? (
-            <div className="rcatalog-empty">Loading resources...</div>
-          ) : resources.length === 0 ? (
-            <div className="rcatalog-empty">No resources match the current filters.</div>
-          ) : (
-            <div className="rcatalog-grid">
-              {resources.map((resource) => (
-                <article className="rcatalog-item" key={String(resource.id)}>
-                  <div className="rcatalog-item-head">
-                    <div>
-                      <h3>{resource.name}</h3>
-                      <p className="rcatalog-meta">{resource.type}</p>
-                    </div>
-                    <span className={`rcatalog-status rcatalog-status-${String(resource.status || '').toLowerCase()}`}>
-                      {resource.status || 'UNKNOWN'}
+                {/* Body */}
+                <div className="rcat-card-body">
+
+                  {/* Category + Status row */}
+                  <div className="rcat-card-badges">
+                    <span className="rcat-tag">{resource.type || 'RESOURCE'}</span>
+                    <span className={`rcat-badge ${resource.status === 'ACTIVE' ? 'rcat-badge-active' : 'rcat-badge-inactive'}`}>
+                      {resource.status === 'ACTIVE' ? '● Available' : `● ${resource.status || 'Unavailable'}`}
                     </span>
                   </div>
-                  <div className="rcatalog-details">
-                    <p>
-                      <strong>Location:</strong> {formatLocation(resource.location)}
-                    </p>
-                    <p>
-                      <strong>Capacity:</strong> {resource.capacity ?? 'N/A'}
-                    </p>
-                    <div>
-                      <strong>Availability:</strong>
-                      <ul>
-                        {(resource.availabilityWindows || []).length > 0 ? (
-                          resource.availabilityWindows.map((windowItem) => (
-                            <li key={`${resource.id}-${windowItem.id || windowItem.dayOfWeek}`}>
-                              {formatWindow(windowItem)}
-                            </li>
-                          ))
-                        ) : (
-                          <li>Schedule not set.</li>
-                        )}
-                      </ul>
+
+                  {/* Name */}
+                  <h2 className="rcat-card-name">{resource.name}</h2>
+
+                  {/* Location */}
+                  <p className="rcat-card-location">
+                    <span className="rcat-loc-icon">📍</span>
+                    {formatLocation(resource.location)}
+                  </p>
+
+                  {/* Info panels */}
+                  <div className="rcat-info-row">
+                    <div className="rcat-info-panel">
+                      <span className="rcat-info-label">CAPACITY</span>
+                      <strong className="rcat-info-value">{resource.capacity ?? 'N/A'}</strong>
+                    </div>
+                    <div className="rcat-info-panel">
+                      <span className="rcat-info-label">HOURS</span>
+                      <strong className="rcat-info-value">{formatHours(resource.availabilityWindows)}</strong>
                     </div>
                   </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+
+                  {/* CTA */}
+                  <Link className="rcat-cta" to="/user/bookings/new">
+                    View Details and Book
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
