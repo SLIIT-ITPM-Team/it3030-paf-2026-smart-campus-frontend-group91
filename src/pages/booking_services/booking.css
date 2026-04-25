@@ -185,6 +185,15 @@
   color: #94a3b8;
 }
 
+.booking-input[type="date"]::-webkit-calendar-picker-indicator,
+.booking-input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  background-color: #2563eb;
+  border-radius: 4px;
+  padding: 4px 6px;
+  opacity: 1;
+}
+
 .booking-textarea {
   min-height: 90px;
   resize: vertical;

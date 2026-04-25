@@ -1,4 +1,4 @@
-/* Resource Catalogue — vertical stacked card feed */
+/* Resource Catalogue — 3-column grid with pagination */
 
 @keyframes rcatFadeUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -8,7 +8,7 @@
 /* ── Root ── */
 .rcat-root {
   min-height: calc(100svh - 82px);
-  padding: 36px 20px 60px;
+  padding: 36px 24px 60px;
   background:
     radial-gradient(circle at 15% 0%, rgba(59,130,246,.10) 0%, transparent 45%),
     radial-gradient(circle at 85% 5%, rgba(16,185,129,.09) 0%, transparent 50%),
@@ -16,7 +16,8 @@
 }
 
 .rcat-wrap {
-  width: min(560px, 100%);   /* single-column, card-width constrained */
+  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -141,10 +142,10 @@
 
 @keyframes rcatSpin { to { transform: rotate(360deg); } }
 
-/* ── Feed — single column ── */
+/* ── Feed — 3-column grid ── */
 .rcat-feed {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
@@ -156,13 +157,13 @@
   box-shadow: 0 8px 32px rgba(15,23,42,.10);
   animation: rcatFadeUp .5s ease both;
   display: flex;
-  flex-direction: column;   /* image on top, body below */
+  flex-direction: column;
 }
 
-/* Image — full width, fixed height */
+/* Image */
 .rcat-card-img {
   width: 100%;
-  height: 220px;
+  height: 180px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -181,8 +182,9 @@
 .rcat-card-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 20px 20px 22px;
+  gap: 12px;
+  padding: 18px 18px 20px;
+  flex: 1;
 }
 
 /* Badges row */
@@ -190,7 +192,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -201,14 +203,14 @@
   text-transform: uppercase;
   color: #1d4ed8;
   background: #eff6ff;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 999px;
 }
 
 .rcat-badge {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 999px;
 }
 
@@ -218,7 +220,7 @@
 /* Name */
 .rcat-card-name {
   margin: 0;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.25;
@@ -227,27 +229,27 @@
 /* Location */
 .rcat-card-location {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.rcat-loc-icon { font-size: 14px; flex-shrink: 0; }
+.rcat-loc-icon { font-size: 13px; flex-shrink: 0; }
 
-/* Info panels — side by side */
+/* Info panels */
 .rcat-info-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .rcat-info-panel {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -262,25 +264,25 @@
 }
 
 .rcat-info-value {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   color: #0f172a;
 }
 
-/* CTA — full width */
+/* CTA */
 .rcat-cta {
   display: block;
   text-align: center;
   text-decoration: none;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   color: #ffffff;
   background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  padding: 15px;
-  border-radius: 14px;
+  padding: 13px;
+  border-radius: 12px;
   box-shadow: 0 6px 20px rgba(37,99,235,.28);
   transition: transform .2s ease, box-shadow .2s ease;
-  margin-top: 2px;
+  margin-top: auto;
 }
 
 .rcat-cta:hover {
@@ -288,8 +290,55 @@
   box-shadow: 0 12px 28px rgba(37,99,235,.34);
 }
 
+/* ── Pagination ── */
+.rcat-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0 4px;
+  flex-wrap: wrap;
+}
+
+.rcat-page-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #374151;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .18s, border-color .18s, color .18s, box-shadow .18s;
+}
+
+.rcat-page-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.rcat-page-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.rcat-page-btn.rcat-page-active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37,99,235,.30);
+}
+
 /* ── Responsive ── */
-@media (min-width: 900px) {
-  /* On wider screens keep single column but allow slightly wider cards */
-  .rcat-wrap { width: min(600px, 100%); }
+@media (max-width: 1024px) {
+  .rcat-feed { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .rcat-feed { grid-template-columns: 1fr; }
+  .rcat-root  { padding: 24px 16px 48px; }
 }
