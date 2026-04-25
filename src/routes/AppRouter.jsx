@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import ScrollToTop from '../components/ScrollToTop';
 import App from '../App';
 import { useAuth } from '../auth/AuthContext';
 import AppLayout from '../layout/AppLayout';
@@ -44,6 +45,8 @@ const DashboardEntry = () => {
 
 const AppRouter = () => {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<LandingPage />} />
 
@@ -146,6 +149,7 @@ const AppRouter = () => {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 };
 

@@ -135,36 +135,144 @@
 
 /* ── File input ──────────────────────────────────────────── */
 .file-input {
-  width: 100%;
-  font: inherit;
+  display: none;
+}
+
+.label-hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── Drop zone ──────────────────────────────── */
+.drop-zone {
+  border: 2px dashed rgba(99,102,241,.30);
+  border-radius: 12px;
+  background: #fafafe;
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: #6366f1;
+  background: #f0f0ff;
+}
+
+.drop-zone.has-files {
+  border-style: solid;
+  border-color: rgba(99,102,241,.25);
+  min-height: unset;
+}
+
+.drop-zone-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.drop-icon { font-size: 1.6rem; }
+
+.drop-text {
   font-size: 13px;
   color: #4c4877;
-  cursor: pointer;
+  font-weight: 500;
 }
 
-.file-input::file-selector-button {
-  background: rgba(99, 102, 241, 0.08);
-  color: #4338ca;
-  border: 1.5px solid rgba(99, 102, 241, 0.28);
-  padding: 7px 14px;
-  border-radius: 8px;
-  margin-right: 10px;
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  transition: all 0.15s ease;
-}
-
-.file-input::file-selector-button:hover {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: #6366f1;
-}
-
-.file-count {
-  margin-top: 4px;
-  font-size: 12px;
+.drop-sub {
+  font-size: 11px;
   color: #9ca3af;
+}
+
+/* ── Previews ───────────────────────────────── */
+.drop-previews {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.drop-preview-item {
+  position: relative;
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.drop-preview-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px solid rgba(99,102,241,.22);
+  display: block;
+}
+
+.drop-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background .15s;
+}
+
+.drop-preview-remove:hover { background: #b91c1c; }
+
+.drop-preview-name {
+  font-size: 10px;
+  color: #6b7280;
+  text-align: center;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drop-preview-add {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  border: 2px dashed rgba(99,102,241,.30);
+  background: #f5f3ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #6366f1;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.drop-preview-add:hover {
+  border-color: #6366f1;
+  background: #ede9fe;
 }
 
 /* ── Footer ──────────────────────────────────────────────── */
