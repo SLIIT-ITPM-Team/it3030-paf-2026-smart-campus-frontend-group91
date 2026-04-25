@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import api from '../../api/api';
+import api, { API_BASE_URL } from '../../api/api';
 import AssignTechnicianModal from '../modals/AssignTechnicianModal';
 import RejectTicketModal from '../modals/RejectTicketModal';
 import SlaPanel from './SlaPanel';
@@ -18,6 +18,7 @@ const TicketDetails = ({ ticket, onUpdate, currentRole = 'USER' }) => {
   const [showNotesModal, setShowNotesModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
   const [notesText, setNotesText] = useState('');
+  const [lightboxSrc, setLightboxSrc] = useState(null);
 
   const technicianStatuses = ['OPEN', 'IN_PROGRESS', 'RESOLVED'];
   const adminStatuses = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED', 'REJECTED'];
@@ -162,6 +163,35 @@ const TicketDetails = ({ ticket, onUpdate, currentRole = 'USER' }) => {
           </div>
         )}
 
+        {ticket.attachments?.length > 0 && (
+          <div className="attachments-section">
+            <div className="section-label">Attachments ({ticket.attachments.length})</div>
+            <div className="attachments-grid">
+              {ticket.attachments.map((att) => {
+                const src = att.fileUrl?.startsWith('http')
+                  ? att.fileUrl
+                  : `http://localhost:8081${att.fileUrl.replace('/api/uploads/', '/uploads/tickets/')}`;
+                return (
+                  <button
+                    key={att.id}
+                    type="button"
+                    className="attachment-thumb-wrap"
+                    onClick={() => setLightboxSrc(src)}
+                  >
+                    <img
+                      src={src}
+                      alt={`Attachment ${att.id}`}
+                      className="attachment-thumb"
+                      onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
+                    />
+                    <div className="attachment-overlay">&#128269;</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <SlaPanel ticket={ticket} />
 
         <div className="details-row">
@@ -225,6 +255,27 @@ const TicketDetails = ({ ticket, onUpdate, currentRole = 'USER' }) => {
           </div>
         )}
       </div>
+
+      {lightboxSrc && (
+        <div
+          className="lightbox-overlay"
+          onClick={() => setLightboxSrc(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            className="lightbox-close"
+            onClick={() => setLightboxSrc(null)}
+            aria-label="Close"
+          >&times;</button>
+          <img
+            src={lightboxSrc}
+            alt="Attachment preview"
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       {showAssignModal && (
         <AssignTechnicianModal ticket={ticket} onClose={() => setShowAssignModal(false)} onUpdate={onUpdate} />
