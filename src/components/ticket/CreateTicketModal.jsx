@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../api/api';
+import resourceService from '../../services/resourceService';
 import './CreateTicketModal.css';
 
 const CreateTicketModal = ({ onClose, onCreated }) => {
@@ -10,9 +11,14 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
     contactDetails: '',
     description: ''
   });
+  const [resources, setResources] = useState([]);
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    resourceService.getResources().then(setResources).catch(() => {});
+  }, []);
 
   const categories = ['Hardware', 'Software', 'Network', 'Facility', 'Other'];
   const priorities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -45,7 +51,11 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
       setError('');
       const data = new FormData();
 
-      const ticketBlob = new Blob([JSON.stringify(formData)], {
+      const payload = {
+        ...formData,
+        resourceId: formData.resourceId !== '' ? parseInt(formData.resourceId, 10) : null,
+      };
+      const ticketBlob = new Blob([JSON.stringify(payload)], {
         type: 'application/json'
       });
       data.append('ticket', ticketBlob);
@@ -95,9 +105,15 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
           </div>
 
           <div className="form-group">
-            <label>Resource / Location ID</label>
-            <input type="text" name="resourceId" className="input-field" placeholder="e.g. Room 301, Projector 5"
-                   value={formData.resourceId} onChange={handleInputChange} />
+            <label>Resource</label>
+            <select name="resourceId" className="input-field" value={formData.resourceId} onChange={handleInputChange}>
+              <option value="">Select Resource (optional)</option>
+              {resources.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.resourceName}{r.location ? ` — ${r.location}` : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
