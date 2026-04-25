@@ -135,12 +135,60 @@ const AdminBookings = () => {
   return (
     <section className="booking-page">
       <div className="booking-container">
-        <div className="booking-card">
-          <h1 className="booking-title">Admin Booking Management</h1>
-          <p className="booking-sub">
-            View all bookings across users, process requests quickly, and monitor schedules through calendar views.
-          </p>
+        <div className="booking-hero">
+          <div className="booking-hero-kicker">Admin Dashboard</div>
+          <div className="booking-hero-row">
+            <div>
+              <h1 className="booking-title">Booking Management</h1>
+              <p className="booking-sub">
+                View all bookings across users, process requests quickly, and monitor schedules through comprehensive calendar views.
+              </p>
+            </div>
+            <div className="booking-hero-badge">
+              <span className="booking-pill" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                background: 'rgba(255, 255, 255, 0.15)',
+                color: '#ffffff',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                padding: '6px 14px',
+                fontWeight: '600',
+                letterSpacing: '0.02em'
+              }}>
+                <span className="booking-status-dot" style={{ background: '#4ade80', margin: 0, boxShadow: '0 0 8px #4ade80' }}></span>
+                System Online
+              </span>
+            </div>
+          </div>
         </div>
+
+        {!loading && !error && (
+          <div className="booking-metrics">
+            <div className="booking-metric">
+              <span className="booking-metric-value">{bookings.length}</span>
+              <span className="booking-metric-label">Total Bookings</span>
+            </div>
+            <div className="booking-metric">
+              <span className="booking-metric-value">{bookings.filter(b => b.status === 'PENDING').length}</span>
+              <span className="booking-metric-label">Pending Requests</span>
+            </div>
+            <div className="booking-metric">
+              <span className="booking-metric-value">{bookings.filter(b => b.status === 'APPROVED').length}</span>
+              <span className="booking-metric-label">Approved</span>
+            </div>
+            <div className="booking-metric">
+              <span className="booking-metric-value">{bookings.filter(b => {
+                const today = new Date().toISOString().split('T')[0];
+                return b.date === today;
+              }).length}</span>
+              <span className="booking-metric-label">Today's Bookings</span>
+            </div>
+          </div>
+        )}
 
         {loading ? <div className="booking-alert booking-alert-info">Loading all bookings...</div> : null}
         {error ? <div className="booking-alert booking-alert-error">{error}</div> : null}

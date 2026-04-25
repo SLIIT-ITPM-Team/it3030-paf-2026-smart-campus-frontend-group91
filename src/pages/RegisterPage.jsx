@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/api';
+import { startGoogleSignIn } from '../api/authService';
 import Footer from '../components/Footer';
 
 const RegisterPage = () => {
@@ -198,6 +199,14 @@ const RegisterPage = () => {
             <button className="login-submit-btn" type="submit">
               <span>Register</span>
               <span aria-hidden="true">&rarr;</span>
+            </button>
+
+            <button
+              className="login-google-btn"
+              type="button"
+              onClick={startGoogleSignIn}
+            >
+              Continue with Google
             </button>
 
             <p className="auth-bottom-text">

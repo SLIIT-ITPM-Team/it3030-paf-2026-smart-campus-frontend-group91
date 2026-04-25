@@ -46,18 +46,40 @@ const OAuthCallbackPage = () => {
     };
   }, [completeOAuthCallback, navigate, searchParams]);
 
+  const pageStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '100svh',
+    gap: '20px',
+    background: 'linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #42a5f5 100%)',
+    color: '#fff',
+    fontFamily: 'system-ui, sans-serif',
+  };
+
   if (error) {
     return (
-      <section id="center">
-        <div className="status-card">{error}</div>
-      </section>
+      <div style={pageStyle}>
+        <div style={{ fontSize: '40px' }}>⚠️</div>
+        <p style={{ fontSize: '16px', fontWeight: 500, margin: 0, textAlign: 'center', maxWidth: '320px' }}>{error}</p>
+        <a href="/login" style={{ color: '#fff', fontWeight: 600, textDecoration: 'underline' }}>Back to Login</a>
+      </div>
     );
   }
 
   return (
-    <section id="center">
-      <div className="status-card">Completing Google sign-in...</div>
-    </section>
+    <div style={pageStyle}>
+      <div style={{
+        width: '48px', height: '48px',
+        border: '4px solid rgba(255,255,255,0.3)',
+        borderTopColor: '#fff',
+        borderRadius: '50%',
+        animation: 'oauth-spin 0.8s linear infinite',
+      }} />
+      <p style={{ fontSize: '17px', fontWeight: 500, margin: 0 }}>Completing Google sign-in...</p>
+      <style>{`@keyframes oauth-spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
   );
 };
 

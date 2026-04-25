@@ -3,6 +3,8 @@ import App from '../App';
 import { useAuth } from '../auth/AuthContext';
 import AppLayout from '../layout/AppLayout';
 import AdminDashboard from '../pages/AdminDashboard';
+import AdminAnalyticsDashboard from '../pages/AdminAnalyticsDashboard';
+import ResourceManagementPage from '../pages/ResourceManagementPage';
 import AdminBookingManagementPage from '../pages/booking_services/AdminBookings';
 import UserBookingManagementPage from '../pages/booking_services/StudentBooking';
 import BookingDetails from '../pages/booking_services/BookingDetails';
@@ -10,9 +12,11 @@ import BookingFormPage from '../pages/booking_services/BookingFormPage';
 import LandingPage from '../pages/LandingPage';
 import LoginPage from '../pages/LoginPage';
 import OAuthCallbackPage from '../pages/OAuthCallbackPage';
+import ResourceCatalogPage from '../pages/ResourceCatalogPage';
 import RegisterPage from '../pages/RegisterPage';
 import TechnicianDashboard from '../pages/TechnicianDashboard';
 import UserDashboard from '../pages/UserDashboard';
+import TicketsPage from '../pages/TicketsPage';
 import ProtectedRoute from './ProtectedRoute';
 import PublicOnlyRoute from './PublicOnlyRoute';
 import RoleRoute from './RoleRoute';
@@ -59,6 +63,10 @@ const AppRouter = () => {
               path="/user"
               element={<UserDashboard />}
             />
+             <Route
+               path="/user/resources"
+               element={<ResourceCatalogPage />}
+             />
           </Route>
 
           <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
@@ -99,12 +107,38 @@ const AppRouter = () => {
               path="/admin"
               element={<AdminDashboard />}
             />
+            <Route
+              path="/admin/resources"
+              element={<ResourceManagementPage />}
+            />
+            <Route
+              path="/admin/analytics"
+              element={<AdminAnalyticsDashboard />}
+            />
           </Route>
 
           <Route element={<RoleRoute allowedRoles={['TECHNICIAN']} />}>
             <Route
               path="/technician"
               element={<TechnicianDashboard />}
+            />
+            <Route
+              path="/technician/tickets"
+              element={<TicketsPage />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['USER']} />}>
+            <Route
+              path="/user/tickets"
+              element={<TicketsPage />}
+            />
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
+            <Route
+              path="/admin/tickets"
+              element={<TicketsPage />}
             />
           </Route>
         </Route>
