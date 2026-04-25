@@ -12,12 +12,10 @@ yarn-error.log*
 .DS_Store
 
 # Environment files
-.env
-.env.local
 
 # IDE
-.vscode/
 .idea/
 
 # System / user files (IMPORTANT)
 .bash_history
+config.bat

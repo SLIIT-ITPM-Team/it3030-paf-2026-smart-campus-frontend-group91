@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import catalogResourceService from '../services/catalogResourceService';
 import './ResourceCatalogPage.css';
 
+const ITEMS_PER_PAGE = 9;
+
 const normalizeFilters = (filters) => ({
   keyword: filters.keyword.trim() || undefined,
 });
@@ -37,10 +39,17 @@ const ResourceCatalogPage = () => {
   const [filters, setFilters] = useState({ keyword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handleFilterChange = (e) => {
+    setFilters({ keyword: e.target.value });
+    setCurrentPage(1);
+  };
 
   const loadResources = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage('');
+    setCurrentPage(1);
     try {
       const data = await catalogResourceService.getResources(normalizeFilters(filters));
       setResources(data);
@@ -55,6 +64,12 @@ const ResourceCatalogPage = () => {
   }, [filters]);
 
   useEffect(() => { loadResources(); }, [loadResources]);
+
+  const totalPages = Math.ceil(resources.length / ITEMS_PER_PAGE);
+  const paginatedResources = resources.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
 
   return (
     <section className="rcat-root">
@@ -74,7 +89,7 @@ const ResourceCatalogPage = () => {
               className="rcat-search-input"
               placeholder="Search by resource name…"
               value={filters.keyword}
-              onChange={(e) => setFilters({ keyword: e.target.value })}
+              onChange={handleFilterChange}
             />
             <button type="button" className="rcat-search-btn" onClick={loadResources}>
               Search
@@ -98,59 +113,92 @@ const ResourceCatalogPage = () => {
             <p>No resources match your search.</p>
           </div>
         ) : (
-          <div className="rcat-feed">
-            {resources.map((resource) => (
-              <article className="rcat-card" key={String(resource.id)}>
+          <>
+            <div className="rcat-feed">
+              {paginatedResources.map((resource) => (
+                <article className="rcat-card" key={String(resource.id)}>
 
-                {/* Image — full width top */}
-                <div className="rcat-card-img">
-                  <img
-                    src={getResourceImageUrl(resource)}
-                    alt={resource.name}
-                    onError={(e) => { e.currentTarget.src = fallbackImage; }}
-                  />
-                </div>
-
-                {/* Body */}
-                <div className="rcat-card-body">
-
-                  {/* Category + Status row */}
-                  <div className="rcat-card-badges">
-                    <span className="rcat-tag">{resource.type || 'RESOURCE'}</span>
-                    <span className={`rcat-badge ${resource.status === 'ACTIVE' ? 'rcat-badge-active' : 'rcat-badge-inactive'}`}>
-                      {resource.status === 'ACTIVE' ? '● Available' : `● ${resource.status || 'Unavailable'}`}
-                    </span>
+                  {/* Image — full width top */}
+                  <div className="rcat-card-img">
+                    <img
+                      src={getResourceImageUrl(resource)}
+                      alt={resource.name}
+                      onError={(e) => { e.currentTarget.src = fallbackImage; }}
+                    />
                   </div>
 
-                  {/* Name */}
-                  <h2 className="rcat-card-name">{resource.name}</h2>
+                  {/* Body */}
+                  <div className="rcat-card-body">
 
-                  {/* Location */}
-                  <p className="rcat-card-location">
-                    <span className="rcat-loc-icon">📍</span>
-                    {formatLocation(resource.location)}
-                  </p>
+                    {/* Category + Status row */}
+                    <div className="rcat-card-badges">
+                      <span className="rcat-tag">{resource.type || 'RESOURCE'}</span>
+                      <span className={`rcat-badge ${resource.status === 'ACTIVE' ? 'rcat-badge-active' : 'rcat-badge-inactive'}`}>
+                        {resource.status === 'ACTIVE' ? '● Available' : `● ${resource.status || 'Unavailable'}`}
+                      </span>
+                    </div>
 
-                  {/* Info panels */}
-                  <div className="rcat-info-row">
-                    <div className="rcat-info-panel">
-                      <span className="rcat-info-label">CAPACITY</span>
-                      <strong className="rcat-info-value">{resource.capacity ?? 'N/A'}</strong>
+                    {/* Name */}
+                    <h2 className="rcat-card-name">{resource.name}</h2>
+
+                    {/* Location */}
+                    <p className="rcat-card-location">
+                      <span className="rcat-loc-icon">📍</span>
+                      {formatLocation(resource.location)}
+                    </p>
+
+                    {/* Info panels */}
+                    <div className="rcat-info-row">
+                      <div className="rcat-info-panel">
+                        <span className="rcat-info-label">CAPACITY</span>
+                        <strong className="rcat-info-value">{resource.capacity ?? 'N/A'}</strong>
+                      </div>
+                      <div className="rcat-info-panel">
+                        <span className="rcat-info-label">HOURS</span>
+                        <strong className="rcat-info-value">{formatHours(resource.availabilityWindows)}</strong>
+                      </div>
                     </div>
-                    <div className="rcat-info-panel">
-                      <span className="rcat-info-label">HOURS</span>
-                      <strong className="rcat-info-value">{formatHours(resource.availabilityWindows)}</strong>
-                    </div>
+
+                    {/* CTA */}
+                    <Link className="rcat-cta" to={`/user/bookings/new?resourceId=${resource.id}`}>
+                      View Details and Book
+                    </Link>
                   </div>
+                </article>
+              ))}
+            </div>
 
-                  {/* CTA */}
-                  <Link className="rcat-cta" to="/user/bookings/new">
-                    View Details and Book
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="rcat-pagination">
+                <button
+                  className="rcat-page-btn"
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                  disabled={currentPage === 1}
+                >
+                  ← Prev
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    className={`rcat-page-btn${currentPage === page ? ' rcat-page-active' : ''}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  className="rcat-page-btn"
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

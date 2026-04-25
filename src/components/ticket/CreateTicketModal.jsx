@@ -30,17 +30,17 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
 
   const handleFileChange = (e) => {
     if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      if (selectedFiles.length > 3) {
-        alert("Maximum 3 images allowed");
-        return;
-      }
-      const areAllImages = selectedFiles.every(f => f.type.startsWith('image/'));
-      if (!areAllImages) {
-        alert("Only image files are allowed");
-        return;
-      }
-      setFiles(selectedFiles);
+      const incoming = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+      setFiles(prev => {
+        const merged = [...prev, ...incoming];
+        if (merged.length > 3) {
+          alert('Maximum 3 images allowed');
+          return merged.slice(0, 3);
+        }
+        return merged;
+      });
+      // reset input so the same file can be re-selected if removed
+      e.target.value = '';
     }
   };
 
@@ -129,11 +129,55 @@ const CreateTicketModal = ({ onClose, onCreated }) => {
           </div>
 
           <div className="form-group">
-            <label>Attachments (Max 3 Images)</label>
-            <input type="file" multiple accept="image/*" onChange={handleFileChange} className="file-input" />
-            <div className="file-count">
-              {files.length > 0 ? `${files.length} file(s) selected` : 'No files selected'}
+            <label>Attachments <span className="label-hint">(Max 3 images)</span></label>
+            <div
+              className={`drop-zone ${files.length > 0 ? 'has-files' : ''}`}
+              onClick={() => document.getElementById('ticket-file-input').click()}
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }}
+              onDragLeave={(e) => e.currentTarget.classList.remove('drag-over')}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove('drag-over');
+                const dropped = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')).slice(0, 3);
+                setFiles(dropped);
+              }}
+            >
+              {files.length === 0 ? (
+                <div className="drop-zone-empty">
+                  <span className="drop-icon">🖼️</span>
+                  <span className="drop-text">Click or drag up to <strong>3 images</strong> here</span>
+                  <span className="drop-sub">PNG, JPG, WEBP supported</span>
+                </div>
+              ) : (
+                <div className="drop-previews">
+                  {files.map((f, i) => (
+                    <div key={i} className="drop-preview-item">
+                      <img src={URL.createObjectURL(f)} alt={f.name} className="drop-preview-img" />
+                      <button
+                        type="button"
+                        className="drop-preview-remove"
+                        onClick={(e) => { e.stopPropagation(); setFiles(prev => prev.filter((_, idx) => idx !== i)); }}
+                      >&times;</button>
+                      <span className="drop-preview-name">{f.name.length > 14 ? f.name.slice(0, 12) + '…' : f.name}</span>
+                    </div>
+                  ))}
+                  {files.length < 3 && (
+                    <div className="drop-preview-add">
+                      <span>+</span>
+                      <span className="drop-sub">{3 - files.length} more</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+            <input
+              id="ticket-file-input"
+              type="file"
+              multiple
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
           </div>
 
           {error && (
